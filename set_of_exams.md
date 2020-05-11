@@ -1,19 +1,31 @@
 ## Algorithm
-1.series_sum
+(1)series_sum
 给出一个正整数N和长度L，找出一段长度大于等于L的连续非负整数，他们的和恰好为N。答案可能有多个，我们需要找出长度最小的那个。
 输入描述:
 输入数据包括一行： 两个正整数N(1 ≤ N ≤ 1000000000),L(2 ≤ L ≤ 100)
 输出描述:
 从小到大输出这段连续非负整数，以空格分隔，行末无空格。如果没有这样的序列或者找出的序列长度大于100，则输出No。
-Summary:1.map 函数  2.python遍历习惯从0开始  3.注意python数值运算过程中自动对数据类型的扩展变换  4.^ 是按位异或运算符，** 是幂运算符
+>Summary:
+1.√map(Fun, Iterable_object) , 对可迭代对象重复运算；返回迭代器(只可往前迭代，迭代完成时引起StopIteration 异常。)  
+2.√python遍历习惯从0开始  
+3.注意python数值运算过程中自动对数据类型的扩展变换  
+4.^ 是按位异或运算符，** 是幂运算符
+
+(3)length_of_longest_substring
+给定一个字符串，请你找出其中不含有重复字符的 最长子串 的长度。
+>Summary:
+1.滑动窗口动态规划
+2.Python 的数组矩阵操作、Numpy--array、Pandas--Series,df
+3.Python 字符串函数
 
 
 ## Data Structure
-2.Sum_of_two_num(Linked-list)
+(2)Sum_of_two_num(Linked-list)
 给出两个非空的链表用来表示两个非负的整数。其中，它们各自的位数是按照逆序的方式存储的，并且它们的每个节点只能存储一位数字。
 如果，我们将这两个数相加起来，则会返回一个新的链表来表示它们的和。
 您可以假设除了数字0之外，这两个数都不会以0开头。
-Summary:1.if-else 语句的多种写法：
+>Summary:
+1.if-else 条件赋值语句的多种写法：
 if a>b:
     c=a
 else:
@@ -21,11 +33,16 @@ else:
 ------
 c = a if a>b else b
 ------
-c = [a,b][a<b]
+c = [a,b][a>b]
 ------
 c=(a>b and [a] or [b])[0]
-2.链表定义注意保留预结点，否则更新指针容易丢失表头
-3.def()->: 函数注解
+2.√链表定义注意保留预结点，否则更新指针容易丢失表头
+3.def foobar(a:int, b:"it's b", c: str=5) -> tuple: 函数注解语法(Function Annotations)
+获取注解有两种方法：
+①foobar.__annotations__; ②import inspect, inspect.signature(foobar)
+另，Python 解释器不会基于函数注解自动进行类型检查，类型检查需要自己实现。
+
+
 
 ## Database
 
