@@ -20,6 +20,14 @@
 3.Python 字符串函数
 
 
+(11)longest_palindrome
+找出字符串s的最长回文字串。
+>Summary:
+1.！注意指针加偏移值的负值，边界以及尾部加一情况  #"ccb"
+2.情况枚举的相互独立，相互穷尽  #"sooos"
+3.range() 函数的某位设定（正负步长）
+
+
 (10)!median_of_sorted_seqs
 找出两个正序数列的中位数，要求时间复杂度不大于O(log(m+n))
 >Summary:
@@ -30,6 +38,9 @@
 4.python测试
 5.程序的边界条件考虑
 6.编程的逻辑结构
+7.尾递归
+
+
 
 
 ## Data Structure
@@ -54,6 +65,7 @@ c=(a>b and [a] or [b])[0]
 获取注解有两种方法：
 ①foobar.__annotations__; ②import inspect, inspect.signature(foobar)
 另，Python 解释器不会基于函数注解自动进行类型检查，类型检查需要自己实现。
+
 
 
 
