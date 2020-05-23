@@ -98,6 +98,7 @@ class Solution:
         return True
 '''
 
+'''
 # Version3
 # 动态规划
 # 拆解回文判断为①首尾字符相等和②子字符串是否为回文的判断
@@ -135,3 +136,8 @@ class Solution:
                     id = i
 
         return s[id, id+length]
+'''
+
+
+# Version 4
+# Manacher algorithm

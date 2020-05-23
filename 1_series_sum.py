@@ -16,6 +16,8 @@ if l == 101:
     print("No")    #* Judging condition for NO pass 
 #* python 不用担心溢出问题，因为溢出时会自动拓展数据类型
 """
+
+
 #version 2
 import math
 
