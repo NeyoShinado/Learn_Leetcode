@@ -1,6 +1,8 @@
 '''
 # Version1
 # Brute Force
+# 该方法按照正负两组数之和的组合查找第三数
+# 忽视了遍历过程中两两配对重复一次出现的情况，且要在组合和数组之间切换，异常复杂
 class Solution:
 	def threeSum(self, nums: List[int]) -> List[List[int]]:
 		# init
@@ -65,4 +67,39 @@ class Solution:
 
 
 # Version2
+# 给数组排序以略过重复的情况
+# 遍历单一元素，按#两数之和#O(N)找出对应的所有组合
+# 注：后期的遍历组合都与遍历过的元素无关，所以不会遗漏
+# TC:O(N^2)  SC:O(1)
+class Solution:
+	def threeSum(self, nums:List[int]) -> List[List[int]]:
+		#init 
+		nums.sort()
+		N = len(nums)
+		res = []
 
+		# special case
+		if sum(nums[:3]) > 0 or sum(nums[-3:]) < 0:
+			return res
+
+		for i in range(N):
+			# 去重
+			if i > 0 and nums[i] == nums[i-1]:
+				continue
+			L = i + 1
+			R = N - 1
+			while R > L:
+				Sum = nums[i] + nums[L] + nums[R]
+				if  Sum == 0:
+					res.append([nums[i],nums[L],nums[R]])
+					while R > L and nums[R] == nums[R-1]:
+						R -= 1
+					while R > L and nums[L] == nums[L+1]:
+						L += 1
+					R -= 1
+					L += 1
+				elif Sum > 0:
+					R -= 1
+				else:
+					L += 1
+		return res
