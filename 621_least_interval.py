@@ -1,3 +1,6 @@
+# Not pass
+# 忽略了两组或以上最多执行次数任务的情况
+'''
 class Solution:
 	def leastInterval(self, task: List[str], n: int) -> int:
 		# init
@@ -26,3 +29,19 @@ class Solution:
 			res = N
 
 		return res
+'''
+
+
+# Version1
+# 设重复次数最高为M，前M-1 个任务单元至少长为n+1。
+#!另需考虑最后一个单元的任务数
+from collections import Counter
+
+class Solution:
+	def leastInterval(self, task: List[str], n: int) -> int:
+		ct = Counter(task)
+		nbucket = ct.most_common(1)[0][1]
+		last_bucket_size = list(ct.values()).count(nbucket)
+		res = (nbucket-1)*(n+1) + last_bucket_size
+
+		return max(res, len(task))
