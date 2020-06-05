@@ -128,6 +128,32 @@ class Solution:
 # 两次遍历，一次找最大最小值，一次确认位置
 
 
-# Version 5
+# Version 5⭐
 # 一次遍历版本
-# https://leetcode-cn.com/problems/shortest-unsorted-continuous-subarray/solution/shi-jian-chao-guo-100de-javajie-fa-by-zackqf/
+# 问题子数组的最值查询以及边界确认可以在一次遍历中完成
+# 逆向来看
+#* 左往右遍历时，问题子数组的最大值一定会先于右边界出现
+#* 右往左遍历时，最小值则会先于左边界出现(不然就是正确排序了)
+#* 同时，LR对称移动，有R=N-1-L
+# TC: O(N), SC: O(1)
+class Solution:
+	def findUnsortedSubarray(self, nums):
+		N = len(nums)
+		max_sub = nums[0]
+		min_sub = nums[N-1]
+		L = 0
+		R = -1 		#同时初始化且解决了空输入的特例
+
+		for i in range(N):
+			if max_sub > nums[i]:
+				R = i
+			else:
+				max_sub = nums[i]
+
+			if min_sub < nums[N-1-i]:
+				L = N-1-i
+			else:
+				min_sub = nums[N-1-i]
+
+		res = R-L+1
+		return res
