@@ -52,6 +52,8 @@ def diameter_Tree(node, depth):
 # 递归
 #*任意一条路径都能看作某个节点为根节点的左右子树深度和
 #*递归函数向下遍历各节点并返回其最大深度，再设一个全局变量记录各节点的最大路径
+# 注意：递归函数返回的深度值是最长路径的节点数，因为从叶节点1开始递增，所以最终的路径长减一
+# TC: O(N), SC: O(H),分配的栈空间取决于树的高度
 
 class Solution:
 	def diameterOfBinaryTree(self, root):
