@@ -1,3 +1,6 @@
+'''
+# Version 0
+# 超时
 class Solution:
 	def findAnagrams(self, s: str, p: str) -> List[int]:
 		# init
@@ -36,4 +39,44 @@ class Solution:
 				if R-L == Np-1:
 					res.append(L)
 					L += 1
+		return res
+'''
+
+
+# Version 1
+# 滑动窗口
+# TC: O(N), SC:(N)
+class Solution:
+	def findAnagrams(self, s, t):
+		#init
+		need = {}
+		win = {}
+		for char in t:
+			need[char] = need[char]+1 if char in need.keys() else 1
+		res = []
+		val = 0
+		L = 0
+		R = 0
+		N = len(s)
+		Nt = len(t)
+
+		while R < N:
+			char = s[R]
+			R += 1
+			if char in need.keys():
+				win[char] = win[char]+1 if char in win.keys() else 1
+				if win[char] == need[char]:
+					val += 1
+
+			while  R-L >= Nt:
+				if val == len(need):
+					res.append(L)
+				
+				# shrink window
+				char = s[L]
+				L += 1
+				if char in need.keys():
+					if win[char] == need[char]:
+						val -= 1
+					win[char] -= 1
 		return res
