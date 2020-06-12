@@ -5,6 +5,9 @@
 #         self.left = None
 #         self.right = None
 
+'''
+# Version 0
+# No pass
 class Solution:
 	def pathSum(self, root: TreeNode, sum: int) -> int:
 		# init
@@ -50,3 +53,37 @@ def traverse(node, sum):
 		res += traverse(0, node.right, sum)
 	
 	return res
+'''
+
+
+'''
+# Version 1
+# 递归实现
+# TC: O(N^2), SC: O(N)
+# 每条子路径都重复计算了一遍
+class Solution:
+	def pathSum(self, root, sum):
+		if not root:
+			return 0
+
+		res = countpath(root, sum)
+		Lres = self.pathSum(root.left, sum)
+		Rres = self.pathSum(root.right, sum)
+		return res+Lres+Rres
+
+def countpath(root, sum):
+	if not root:
+		return 0
+
+	sum = sum-root.val
+	res = 1 if sum == 0 else 0
+	return res+countpath(root.left, sum)+countpath(root.right, sum)
+'''
+
+
+# Version 2
+# TS: O(N), SC: O(N)
+# 前缀和 + 哈希表
+# 前缀和指到达当前元素路径上的元素和，两个元素前缀和currSum相等，意味着中间节点的和为0
+# 同理，若AB节点的currSum相差target，A到B之间元素之和为target
+#*注：前缀和需要两节点间只有一条路径，适用于无环图
