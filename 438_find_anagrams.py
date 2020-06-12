@@ -1,3 +1,7 @@
+# Version 0
+# 使用哈希表遍历所有子串
+# 超时
+'''
 class Solution:
 	def findAnagrams(self, s: str, p: str) -> List[int]:
 		# init
@@ -37,3 +41,6 @@ class Solution:
 					res.append(L)
 					L += 1
 		return res
+'''
+
+

@@ -95,7 +95,7 @@ class Solution:
 #!栈迭代实现
 # 使用先进后出栈实现递归，且使用两层循环记录
 # 内层循环想记录所有的右子树中序节点，再通过外层循环逐一将中序节点的左子树遍历
-# 指针为空说明左\右子树已遍历完成，推出下一个左子树节点\中序节点
+# 指针为空说明左/右子树已遍历完成，推出下一个左子树节点/中序节点
 # 指针和栈都为空说明遍历结束，返回结果
 # TC: O(N), SC: O(N)
 class Solution:
@@ -120,3 +120,36 @@ class Solution:
 
 # Version 4
 # 反序中序Moris遍历
+# TC: O(N), SC: O(1)
+#*Morris 遍历(这里以中序遍历为例)会先查找当前节点的前序节点(左子树最右节点或无右节点的左孩子或父节点)
+# 还有一种情况是没左孩子，且是父节点的左孩子，那么它就是首节点，没有前序节点
+# 注：前序节点的右节点一定是空的
+# 遍历过程首先找当前节点的前序节点，使其右节点指向自身，然后遍历其左孩子；
+# 如果前序节点的右节点指回本身，就删除右节点，再进入右孩子。
+# 每个节点最多被遍历两次，同时不占用新的内存空间，解决了子节点回溯的问题。
+class Solution:
+	def convertBST(self, root):
+		def get_successor(node):
+			succ = node.right
+			while succ.left is not None and succ.left is not node:
+				succ = succ.left
+			return succ
+
+		total = 0
+		node = root
+		while node is not None:
+			if node.right is None:
+				total += node.val
+				node.val = total
+				node = node.left
+			else:
+				succ = get_successor(node)
+				if succ.left is None:
+					succ.left = node
+					node = node.right
+				else:
+					succ.left = None
+					total += node.val
+					node.val = total
+					node = node.left
+		return root
