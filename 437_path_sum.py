@@ -115,6 +115,7 @@ class Solution:
 '''
 
 
+'''
 # Version 3
 # 回溯搜索
 # TC: O(NlogN), SC: O(N)
@@ -138,3 +139,30 @@ class Solution:
 
 		map = [0] * 1000
 		return path_sum(root, sum, map, 0)
+'''
+
+
+# Version 4
+# 栈
+# TC: O(N^2), SC: O(N^2)
+# 用栈遍历节点，同时每个栈位存入当前节点的到起点的各路径和
+class Solution:
+	def pathSum(self, root, sum):
+		if not root:
+			return 0
+		stack = [(root, [root.val])]
+		res = 0
+
+		while stack:
+			node, temp = stack.pop()
+			res += temp.count(sum)
+			temp += [0]
+			if node.left:
+				arr = [i+node.left.val for i in temp]
+				stack.append((node.left, arr))
+
+			if node.right:
+				arr = [i+node.right.val for i in temp]
+				stack.append((node.right, arr))
+
+		return res
