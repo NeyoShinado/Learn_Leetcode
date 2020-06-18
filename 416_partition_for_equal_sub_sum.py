@@ -140,14 +140,11 @@ class Solution:
 
 # Version 
 # 背包，状态压缩至一维，同时从后往前填表
-# 从后往前能提前找到不满足nums[i] <= j的情况，提前剪枝
+#*从后往前能提前找到不满足nums[i] <= j的情况，提前剪枝
 # TC: O(NC), SC: O(C)
 class Solution:
 	def canPartition(self, nums):
 		N = len(nums)
-		if N == 0:
-			return False
-
 		total = sum(nums)
 		if total&1 == 1:
 			return False
@@ -156,16 +153,8 @@ class Solution:
 		dp = [False] * (target+1)
 		dp[0] = True
 
-		if nums[0] <= target:
-			dp[nums[0]] = True
-
-		for i in range(1, N):
-			for j in range(target, 0, -1):
-				if nums[i] <= j:
-					break
-
-				if dp[target]:
-					return True
-
+		for i in range(N):
+			# dp[i][j]是由dp[i-1][j]以及dp[i-1][j-nums[i]]确定的，逆序遍历能节省一行数组
+			for j in range(target, nums[i]-1, -1):
 				dp[j] = dp[j] or dp[j-nums[i]]
 		return dp[target]
