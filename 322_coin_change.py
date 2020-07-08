@@ -54,5 +54,52 @@ def change(idxCoin, coins, amount):
 '''
 
 
+'''
 # Version 2
-# 
+# TC: O(SN), SC: O(S)
+#*S为金额，N为面值数，当S较大时正常递归树将爆栈，所以要使用缓存机制
+#*python lru_cache记忆功能跳过重复子函数，加速递归
+import functools
+
+class Solution:
+	def coinChange(self, coins: List[int], amount: int) -> int:
+		@functools.lru_cache(amount)
+		def dp(rem):
+			if rem < 0: return -1
+			if rem == 0: return 0
+			mini = int(1e9)
+			for coin in self.coins:
+				res = dp(rem - coin)
+				if res >= 0 and res < mini:
+					mini = res + 1
+			return mini if mini < int(1e9) else -1
+
+		self.coins = coins
+		if amount < 1: return 0
+		return dp(amount)
+'''
+
+
+# Version 3
+# 动态规划，自下而上
+# F[S] = min(F[S-ci])+1, S-ci≥0
+# TC: O(SN), SC: O(N)
+class Solution:
+	def coinChange(self, coins: List[int], amount: int) -> int:
+		# init
+		res = 0
+		dp = [float("inf")] * (amount+1)
+		dp[0] = 0
+
+		'''慢些，类似于Floyd的更新方式
+		for coin in coins:
+			for x in range(coin, amount + 1):
+				dp[x] = min(dp[x], dp[x - coin] + 1)
+		'''
+		for i in range(1, amount+1):
+			#*小于面值的金额不能凑成
+			if i < min(coins):
+				continue
+			dp[i] = min([dp[i-coin] for coin in coins if i-coin >= 0]) + 1
+
+		return dp[amount] if dp[amount] != float('inf') else -1
