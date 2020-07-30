@@ -69,7 +69,7 @@ class Solution:
 	def maxCoins(self, nums:List[int]) -> int:
 		nums = [1] + nums
 		nums.append(1)
-		@lru_cache(None)  #*
+		@lru_cache(None)  #*lst需要转为元组方可通过
 		def helper(lst):
 			if len(lst) == 3:
 				return lst[1]
@@ -79,6 +79,7 @@ class Solution:
 				mmax = max(mmax, tmp+helper(lst[:i] + lst[i+1:]))
 			return mmax
 		return helper(nums)
+'''
 '''
 class Solution:
     def maxCoins(self, nums: List[int]) -> int:
@@ -100,4 +101,28 @@ class Solution:
             return best
 
         return solve(0, n + 1)
+'''
+
+# Version 2
+# 上述思路是自顶向下的记忆搜索，可转换为自底向上的制表动态规划
+# 转换方程见于上
+# 动态规划的顺序是重点：由于有i<k<j，k∈N，dp[i][j]需要用到其左侧和下侧的项
+# 故动态规划中，按i从n->0，j从i+2->n+2方向更新
+# TC:O(N^3), SC:O(N^2)
+class Solution:
+	def maxCoins(self, nums: List[int]) -> int:
+		n = len(nums)
+		dp = [[0] * (n+2) for _ in range(n+2)]
+		val = [1] + nums + [1]
+
+		for i in range(n-1, -1, -1):
+			for j in range(i+2, n+2):
+				for k in range(i+1, j):
+					total = val[i] * val[k] * val[j]
+					total += dp[i][k] + dp[k][j]
+					dp[i][j] = max(dp[i][j], total)
+		return dp[0][n+1]
+
+
+
 
