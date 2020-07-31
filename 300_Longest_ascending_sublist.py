@@ -97,9 +97,9 @@ class Solution:
 				while l <= r:
 					mid = (l+r) // 2
 					if d[mid] >= n:
-						loc = mid
-						r = mid - 1
+						loc = mid	# 要查找大于n的d[loc]，即d[mid]>n时才能更新loc
+						r = mid - 1 # 中值大就收缩右边界
 					else:
-						l = mid + 1
+						l = mid + 1 # 中值小就收缩左边界
 				d[loc] = n
 		return len(d)
