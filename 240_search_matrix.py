@@ -1,3 +1,4 @@
+# Version0
 class Solution:
 	def searchMatrix(self, matrix, targer):
 		"""
@@ -21,3 +22,8 @@ class Solution:
         # main_body diag search
         if M > N:
         	step = int(M/N)
+
+
+# Version1
+# 二分搜索
+
