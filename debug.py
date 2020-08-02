@@ -1,79 +1,79 @@
 # Version0
-# 约定前序遍历
-# TC：O(N), SC:O(N)
-# ! how to save the structure in a series?
-# Definition for a binary tree node.
-class TreeNode(object):
-    def __init__(self, x):
-        self.val = x
-        self.left = None
-        self.right = None
+class Solution:
+    def searchMatrix(self, matrix, target):
+        # init
+        m = len(matrix)
+        if m == 0:
+            return False
+        n = len(matrix[0])
+        rbias = 0
+        cbias = 0
+        res = False
 
-class Codec:
+        if matrix[m - 1][n - 1] < target or matrix[0][0] > target:
+            return False
 
-    def serialize(self, root):
-        """
-        Encodes a tree to a single string.
-        :type root: TreeNode
-        :rtype: str
-        """
-        se_str = serializeStep(root, "")
-        return se_str.strip(",")
+        while not res and (rbias <= m - 1 or cbias <= n - 1):
+            # min width height cmp
+            l = min(m - rbias, n - cbias)
 
-    def deserialize(self, data):
-        """
-        Decodes your encoded data to tree.
-        :type data: str
-        :rtype: TreeNode
-        """
-        data = data.split(",")
-        if len(data) == 1:
-            root = None
-            return root
+            # search sub-square
+            res = searchSquare(l, rbias, cbias, matrix, target)
+            if res == -1:
+                return False
 
-        root = TreeNode(0)  # init with 0 root
-        root, data = deserializeStep(root, data)
-        return root
+            # rb,cb update
+            if m - rbias > n - cbias:
+                rbias += l
+            elif n - cbias > m - rbias:
+                cbias += l
+            else:
+                rbias += l
+                cbias += l
+
+        return res
 
 
-def serializeStep(node, se_str):
-    # 先序遍历，外加None,None确定叶结点
-    if node == None:
-        se_str += "None,"
+def searchSquare(l, rbias, cbias, matrix, target) -> bool:
+    # l: length of square
+    # rbias, cbias: start index of sub-square
+    # diag search
+    # output: bool type mean target in/not in subsquare
+    #         -1 mean target not in matrix
+    if matrix[rbias][cbias] > target or matrix[rbias + l - 1][cbias + l - 1] < target:
+        return False
+    x = rbias
+    y = cbias
+    while x <= rbias + l - 1:
+        if matrix[x][y] == target:
+            return True
+        elif matrix[x][y] < target:
+            x += 1
+            y += 1
+            continue
+        else:
+            break
+    # locate check
+    if x <= rbias + l - 1:
+        for col in range(cbias, y + 1):
+            if matrix[x][col] == target:
+                return True
+        for row in range(rbias, x + 1):
+            if matrix[row][y] == target:
+                return True
     else:
-        se_str += str(node.val) + ","
-        se_str = serializeStep(node.left, se_str)
-        se_str = serializeStep(node.right, se_str)
-
-    return se_str
+        return False
+    return -1
 
 
-def deserializeStep(node, se_list):
-    # 同源的当层节点在当前函数中更新，所以只需传递序列数组就能重建子树
-    # 函数返回更改后的序列数组
-    # 当左子树为空时，返回的序列数组已将左子树元素弹出，重建当前节点右子树
-    # 当左右子树都为空时，返回的序列数组已经将当前子节点树元素弹出，返回父节点重建其右子树
-    # 最终返回给根节点的数组是空的
-    val = se_list.pop(0)
-    if val != "None":  # 只有非空才是节点对象
-        node = TreeNode(int(val))
-
-    else:
-        node = None
-        return node, se_list
-
-    node.left, se_list = deserializeStep(node.left, se_list)
-    node.right, se_list = deserializeStep(node.right, se_list)
-
-    return node, se_list
+# Version1
+# 二分搜索
 
 
 if __name__ == "__main__":
-    root = TreeNode(1)
-    root.left = TreeNode(2)
-    root.right = TreeNode(3)
+    #matrix = [[1, 4, 7, 11, 15], [2, 5, 8, 12, 19], [3, 6, 9, 16, 22], [10, 13, 14, 17, 24], [18, 21, 23, 26, 30]]
+    matrix = [[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15],[16,17,18,19,20],[21,22,23,24,25]]
+    target = 15
+    t = Solution()
+    res = t.searchMatrix(matrix, target)
 
-    t = Codec()
-    print(t.serialize(root))
-    res = t.deserialize(t.serialize(root))
-    print(res.val)

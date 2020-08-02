@@ -56,6 +56,42 @@ def change(idxCoin, coins, amount):
 
 '''
 # Version 2
+<<<<<<< HEAD
+# Not pass(爆栈)
+# 递归树，按面值划分，自上而下
+# F(S)为组成金额S所需的硬币数量，[c0,...,cn-1]为可选的面值
+#!最优子结构F(S) = F(S-C) + 1
+# 子问题变成枚举c0-cn-1并选F(S)的最小值
+# F(S)=minF(S-ci)+1, s.t.S-ci≥0
+# 用字典记录S子状态的最小数目，避免重复计算
+# TC: O(Sn), SC: O(S)，S为状态的数目
+class Solution:
+	def coinChange(self, coins, amount):
+		# 从大面值开始筛选，减少重复计算次数
+		coins.sort(reverse=True)
+		if amount < 1:  # 默认面值≥1
+			return 0
+		return change(coins, amount, {amount:1e9})
+
+#!count记录数额的最小数目缓存
+def change(coins, res, count):
+	if res < 0:
+		return -1
+	if res == 0:
+		return 0
+	#!计算过当前面值，直接返回，避免重复计算
+	if count.get(res,1e9) != 1e9:
+		return count[res]
+
+    # 枚举面值，算出当前面额的最小硬币数
+	curmin = 1e9
+	for coin in coins:
+		res = change(coins, res-coin, count)
+		if res > 0 and res < curmin:
+			curmin = res + 1
+	count[res] = -1 if curmin == inf else curmin
+	return count[res]
+=======
 # TC: O(SN), SC: O(S)
 #*S为金额，N为面值数，当S较大时正常递归树将爆栈，所以要使用缓存机制
 #*python lru_cache记忆功能跳过重复子函数，加速递归
@@ -77,10 +113,30 @@ class Solution:
 		self.coins = coins
 		if amount < 1: return 0
 		return dp(amount)
+>>>>>>> 1fe1a9d93040bd66f28c02752e2acc1e6ad68a37
 '''
 
 
 # Version 3
+<<<<<<< HEAD
+import functools
+class Solution:
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        @functools.lru_cache(amount)
+        def dp(rem):
+            if rem < 0: return -1
+            if rem == 0: return 0
+            mini = int(1e9)
+            for coin in self.coins:
+                res = dp(rem - coin)
+                if res >= 0 and res < mini:
+                    mini = res + 1
+            return mini if mini < int(1e9) else -1
+
+        self.coins = coins
+        if amount < 1: return 0
+        return dp(amount)
+=======
 # 动态规划，自下而上
 # F[S] = min(F[S-ci])+1, S-ci≥0
 # TC: O(SN), SC: O(N)
@@ -103,3 +159,4 @@ class Solution:
 			dp[i] = min([dp[i-coin] for coin in coins if i-coin >= 0]) + 1
 
 		return dp[amount] if dp[amount] != float('inf') else -1
+>>>>>>> 1fe1a9d93040bd66f28c02752e2acc1e6ad68a37
