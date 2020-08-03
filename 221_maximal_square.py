@@ -67,6 +67,7 @@ class Solution:
 '''
 
 
+'''
 # Version1
 # 暴力
 # 每遇到1尝试将其作为左上角，在下新增一行在右新增一列尝试找最大正方形
@@ -132,3 +133,66 @@ class Solution:
 							break
 		res = l ** 2
 		return res
+'''
+
+
+'''
+# Version2
+# 动态规划
+# TC: O(MN), SC: O(MN)
+# 设dp[i][j]以matrix[i][j]为右下角正方形的最大变长
+# 有状态转移方程dp[i][j]=min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1])+1
+#*另需注意i,j=0时受边界所限，dp[i][j]只能为1
+#!/usr/bin/env/ python
+# coding: utf-8
+# @Time		: 8/3/2020
+# @Author	: Neyo
+class Solution:
+	def maximalSquare(self, matrix: List[List[str]]) -> int:
+		# special case
+		if len(matrix)==0 or len(matrix[0])==0:
+			return 0
+
+		# init
+		M = len(matrix)
+		N = len(matrix[0])
+		l = 0
+		res = 0
+		dp = [[0 for _ in range(N)] for _ in range(M)]
+
+		# traverse
+		for i in range(M):
+			for j in range(N):
+				if matrix[i][j] == "1":
+					dp[i][j] = 1 if i==0 or j==0 else min(dp[i-1][j-1], dp[i][j-1], dp[i-1][j])+1
+					l = max(l, dp[i][j])
+
+		res = l ** 2
+		return res
+'''
+
+
+# Others
+# TC: O(M^2), SC: O(M)
+# 将行化为二进制数，直接通过行的连续与操作判断该行存在的最大正方形；
+# 连续与留下二进制数的最大连续“1”长度就是最大变长
+class Solution:
+
+    def get_width(self, num):
+        width = 0
+        while num > 0:
+            num &= num << 1
+            width += 1
+        return width
+
+    def maximalSquare(self, matrix: List[List[str]]) -> int:
+        nums = [int(''.join(list), base=2) for list in matrix]
+        res = 0
+        for i in range(len(matrix)):
+            now = nums[i]
+            for j in range(i, len(matrix)):
+                now &= nums[j]
+                if self.get_width(now) < j - i + 1:
+                    break
+                res = max(res, j - i + 1)
+        return res ** 2

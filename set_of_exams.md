@@ -10,12 +10,41 @@
 
 #### Base/编程原则
 # ---------------------------------------------
+### 变量定义
+1.变量定义默认指定为语义对应的内容，这样代码的维护会方便很多；而不是为了表达式的整洁，如python 去背景下凑±1，这样会把边界问题复杂化；
+2.同时需要遍历和更新操作的变量最好将遍历变量划分出来；如查找最大可行边长，一边用k在指定范围遍历，一边满足条件时更新l，比直接遍历l，更新时再回滚的情形要简洁；
+
+
 ### 边界条件
 1.数据类型的取值范围
 2.<,>,<=,>=将区间分割成的两部分；加上==,!=分割成了三部分
 3.下标索引的三部分，id<0,0≤id≤size(),size()≤id
 所有这些区间的左右边界就是要考虑的边界条件。
 
+
+### 注释规范
+#! /usr/bin/env python
+# coding:utf-8
+# @Time    : ${DATE} ${TIME}
+# @Author  : Neyo
+# @File    : ${NAME}.py
+# @Software: ${PRODUCT_NAME}
+"""The built-in HTTP Adapter for urllib3.   # 模块简介
+# 使用场合
+Provides a general-case interface for Requests sessions to contact HTTP and
+HTTPS urls by implementing the Transport Adapter interface. This class will
+usually be created by the :class:`Session ` class under the covers. 
+# 输入参数
+:param pool_connections: The number of urllib3 connection pools to cache.
+:param pool_maxsize: The maximum number of connections to save in the pool.
+:param pool_block: Whether the connection pool should block for connections.
+# 用法
+Usage::
+>>> import requests
+>>> s = requests.Session()
+>>> a = requests.adapters.HTTPAdapter(max_retries=3)
+>>> s.mount('http://', a)
+"""
 
 ### python 类内函数
 类下函数定义需添加self参数，使用时python自动为self赋值而不需自己赋值。
@@ -43,6 +72,9 @@ map(int, input().split()) 返回的是一个循环体，不能使用下标，必
 5.[x for _ in range(5)]，循环但不使用变量则无需为其命名，使用'_'
 
 
+### python字符串
+*python join()在长字符串拼接时似乎会出错，原因未明，建议用+
+
 
 
 #### Algorithm/算法
@@ -51,6 +83,13 @@ map(int, input().split()) 返回的是一个循环体，不能使用下标，必
 ### Dynamic Programming/动态规划⭐
 动态规划的思路是空间换时间，其思路是不直面问题求解，而是从原始问题一个最小规模的问题开始，新问的最优解均是由比它规模还小的子问题的最优解转换得到的。通过状态转移方程记录下每一步求解的结果，直到问题解决。
 递归则是直接求解问题，直接加缓存处理重复的子问题，亦称“记忆化递归”，记忆化是减少状态重复计算的重要步骤。
+
+
+(221)maximal_square
+在一个由0和1组成的矩阵内找到之包含1的最大正方形，并返回其面积。
+>Summary:
+1.最大正方形由其角的相邻两个正方形和对角相邻的一个正方形决定
+2.!二进制数的连续与获得当前最大矩形边长，num&=num<<1算最大连续非零位(最大边长)
 
 
 (300)longest_of_ascending_series
@@ -581,10 +620,6 @@ getMin() -- 检索栈中最小元素
 在未排序的数组中找到第k个最大的元素(含重复元素)。
 
 
-(221)maximal_square
-在一个由0和1组成的矩阵内找到之包含1的最大正方形，并返回其面积。
-
-
 (226)invertTree
 镜像翻转一棵二叉树
 
@@ -621,6 +656,13 @@ getMin() -- 检索栈中最小元素
 ### @广发_test
 用数组高精度大数除法。
 数字过大无法表示时，将其存入数组或字符串。余数先设为0，从高位开始取一位数+余数*10后相除得到该位的商，一直循环直到除尽或达到要求精度位。
+
+
+### @拼多多_test⭐⭐
+探险家在二维迷宫中，给定起点-2和出口-3，迷宫中有墙-0、路-1、门-大写字母、钥匙-对应的小写字母，问离开的最短路径。（最多有十把锁）
+难点在于多了锁，不能直接BFS从起点找最短路径。
+>Summary:
+
 
 
 
@@ -733,7 +775,9 @@ getMin() -- 检索栈中最小元素
 ### Bit/位运算
 >Summary:
 1.基础位运算 -- 对2取余:x & 1   整除2:x>>1    奇数:x|1
-2.布莱恩算法算最后设置为：x&(x-1)
+2.布莱恩算法算非零位数目：x&(x-1)
+3.计算连续非零位的最大长度：num &= num << 1
+
 
 (191)hammingWeight
 计算整数二进制中位“1”的个数--汉明重量。
