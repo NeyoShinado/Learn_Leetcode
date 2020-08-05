@@ -1,36 +1,28 @@
-#!usr/bin/python
-# **utf-8**
+#! usr/etc/bin python
+#coding: utf-8
+
+class Solution:
+    def leftHun(self):
+        # input
+        Nbear, Nsug = list(map(int, input().split(" ")))
+        sugar = list(map(int, input().split(" ")))
+        bears = []
+        for i in Nbear:
+            bears.append(list(map(int, input().split(" "))))
+
+        bearFig, bearHun = zip(*bears)
+
+        # sort
+        bearFig.sort()
+        bearFig[::-1]
+        sugar.sort()
+        sugar[::-1]
+
+        # Eat
+        for i in range(Nbear):
+            while bear
+
 
 if __name__ == "__main__":
-    # input
-    s1 = "123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789"
-    s2 = "123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789"
-    n1 = len(s1)
-    n2 = len(s2)
-
-    # init
-    res = []  # string list for res
-    tmp = 0  # cur_val for each bit
-
-    for i in range(n1):
-        carry = 0  # carry for each product
-        for j in range(n2):
-            tmp = int(s1[-i-1]) * int(s2[-j-1])
-            # 最高位可能未有进位，不能用
-            if len(res) >= i + j + 1:
-                tmp += int(res[i + j])
-                res[i + j] = str(tmp % 10 + carry)
-            else:
-                res.insert((i + j), str(tmp % 10 + carry))
-            carry = tmp // 10
-    if carry != 0:
-        if len(res) >= n2 + i + 1:
-            res[n2 + i] = str(carry)
-        else:
-            res.insert((n2 + i), str(carry))
-
-    res = res[::-1]
-    print(len(res))
-    res = "".join(res)
-    print(res)
-    print(len(res))
+    t = Solution()
+    t.leftHun()

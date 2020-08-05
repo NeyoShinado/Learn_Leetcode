@@ -168,3 +168,39 @@ class Solution:
 				res.append(tmp)
 			return res
 '''
+
+
+# Version4
+# BFS
+# BFS的判断条件相较DFS的递归要复杂些，考虑下一层的递归节点及更新值合并在一起入列，
+# 同时考虑以及本层的节点数、查询是否成功、停止条件等情况
+class Solution:
+    def calcEquation(self, equations: List[List[str]], values: List[float], queries: List[List[str]]) -> List[float]:
+        from collections import defaultdict
+        d = defaultdict(list)
+        for i in range(len(equations)):
+            for j in range(2):
+                d[equations[i][j]].append((equations[i][1-j], values[i])) # 这里对同一个list的两个值互相构图
+                values[i] = 1/values[i]
+        res = []
+        for querie in queries:
+            start, end = querie[0], querie[1]
+            if (start == end and start in d):
+                res.append(1.0)
+                continue
+            deque = [(start, 1.0)]
+            visited = set()
+            n = len(res)
+            while deque:
+                s, num = deque.pop(0)
+                if s in visited:
+                    continue
+                visited.add(s)
+                for item in d[s]:
+                    if item[0] == end:
+                        res.append(num*item[1])
+                        break
+                    deque.append((item[0], item[1]*num))
+            if len(res) == n:
+                res.append(-1.0)
+        return res 
