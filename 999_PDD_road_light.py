@@ -240,3 +240,106 @@ if __name__ == "__main__":
 # T4
 # 小熊抢糖
 # 二元排序
+
+
+#-------------------------------------------------
+# T1
+
+
+# T2
+#! usr/etc/bin python
+#coding: utf-8
+
+class Solution:
+    def plantTrees(self):
+        # input
+        N = int(input())
+        trees = list(map(int, input().split(" ")))
+
+
+        if N == 1 and trees[0] > 1:
+            print("-")
+            return
+
+        t1 = 0
+        t2 = 1
+        index = 2
+        res = []
+
+        while (trees[t1] > 0 and trees[t2] > 0) or (trees[t1] ^ trees[t2]) == 1:
+            # plant tree
+            if trees[t1] > 0:
+                res.append(t1+1)
+                trees[t1] -= 1
+            if trees[t2] > 0:
+                res.append(t2+1)
+                trees[t2] -= 1
+
+            # tree empty
+            if trees[t1] == 0 and index < N:
+                t1 = index
+                index += 1
+            if trees[t2] == 0 and index < N:
+                t2 = index
+                index += 1
+
+        # resid check
+        if trees[t1] == 0 and trees[t2] == 0:
+            print(" ".join(list(map(str, res))))
+        else:
+            print("-")
+
+
+
+if __name__ == "__main__":
+    t = Solution()
+    t.plantTrees()
+
+
+# T3
+#! usr/etc/bin python
+#coding: utf-8
+# 爆内存
+
+class Solution:
+    def minSub(self):
+        # input
+        N = int(input())
+        nums = list(map(int, input().split(" ")))
+        #nums = [2, 6, 4, 3]
+        res = []
+        ans = []
+
+        # init
+        queue = [[nums, []]]
+
+        # BFS
+        while queue:
+            tmp = queue.pop(0)
+            cands = tmp[0]
+            sums = tmp[1]
+            # no more nodes, save the ans
+            if len(cands) == 0:
+                ans.append(sums)
+
+            for i in range(len(cands)):
+                for j in range(i+1, len(cands)):
+                    newSums = sums.copy()
+                    newCands = cands.copy()
+                    node1 = newCands[i]
+                    node2 = newCands[j]
+                    newCands.pop(j)    # 有序情况下，从后往前删除不会导致索引错位
+                    newCands.pop(i)
+                    newSums.append(node1+node2)
+                    queue.append([newCands, newSums])
+
+        # res Summary
+        for sums in ans:
+            res.append(max(sums) - min(sums))
+
+        print(str(min(res)))
+
+
+if __name__ == "__main__":
+    t = Solution()
+    t.minSub()

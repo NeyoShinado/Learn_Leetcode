@@ -51,6 +51,12 @@ Usage::
 原因：创建一个类MyClass，示例化后得到MyObject对象。调用对象方法时MyObject.method(arg1, arg2)，python会自动将其转为Myclass.method(MyObject, arg1, arg2)
 
 
+### python list
+1.list作为中间变量或赋值时，要用.copy()浅复制，不然任何的改动都会影响其他赋值的变量；
+2.list循环中删除多个变量时，若删除下标有序，从大往小顺序删除能避免删除元素索引的错位；
+3.*list的提取和删除；
+
+
 ### python set,dict⭐
 1.创建空集合用set()，因为{}指空字典；
 2.*类似JAVA，python的集合元素和字典键都不能使用可变对象（unhashable的对象），否则会报错；
@@ -139,18 +145,124 @@ N个气球上标有不同的数字，存在数组nums中。戳破第i个气球�
 
 ### Sort/排序 or TopK
 平均达到O(NlogN)级别的排序算法，虽然快速排序的最坏情况位O(N^2)，但该情况很少出现，一般情况下都是快速排序速度最快
-1.冒泡排序 -- TC:O(N^2), SC:O(1), 稳定排序
+1.冒泡排序 -- TC:O(N^2), SC:O(1), 稳定
 步骤：指针不断右移，每次修正一对元素，最后一次修正交换的位置表示后面的元素已正确排序；重复直至没有元素交换发生。
 源码：
 def bubbleSort(nums):
-    end = len(nums)
-    while end:
-        end = 0
-        for i in range(end-1):
-            if nums[i] > nums[i+1]:
-                nums[i], nums[i+1] = nums[i+1], nums[i]
-                end = i
+    for i in range(1, len(nums)):
+        for j in range(len(nums)-i):
+            if nums[j] > nums[j+1]:
+                nums[j], nums[j+1] = nums[j+1], nums[j]
     return nums
+
+2.选择排序 -- TC:O(N^2), SC:O(1), 不稳定
+步骤：不断从未排序数组中找出最小/大元素，放大已排序数组的队尾，重复直至排序完毕。
+源码：
+def selectionSort(nums):
+    for i in range(len(nums)-1):
+        minIndex = i
+        for j in range(i+1, len(nums)):
+            if nums[j] < nums[i]:
+                minIndex = j
+        if i != minIndex:
+            nums[i], nums[minIndex] = nums[minIndex], nums[i]
+    return nums
+
+3.插入排序 -- TC:O(N^2), SC:O(1), 稳定
+步骤：像打扑克一样，从未排序数组抽出元素插入到排序数组合适的位置中。
+源码：
+def insertSort1(nums):
+    for i in range(1, len(nums)):
+        insertIndex = i-1
+        while nums[insertIndex] > nums[i] and insertIndex >= 0:
+            insertIndex -= 1
+        nums.insert(insertIndex+1, nums.pop(i))
+    return nums
+
+def insertSort2(nums):
+    for i in range(len(nums)):
+        insertIndex = i-1
+        current = nums[i]
+        while insertIndex >= 0 and nums[insertIndex] > current:
+            nums[insertIndex+1] = nums[insertIndex]
+            insertIndex -= 1
+        nums[insertIndex+1] = current
+    return nums
+
+4.希尔排序 -- TC:O(NlogN), SC:O(1), 不稳定
+步骤：插入排序的改进版，插入排序在几乎排好序的数组中效率高，TC能达到O(N)。但一般对于分布的数据是低效的，一次遍历只移动一位。
+希尔排序按不同的增量因子将数组分为若干子数组分别进行插入排序，等到整体“基本有序”时再进行插入排序。
+源码：
+def shellSort(nums):
+    import math
+    gap = 1
+    while(gap < len(nums)/3):
+        gap = gap*3 + 1
+    while gap > 0:
+        for i in range(gap, len(nums)):
+            tmp = nums[i]
+            j = i - gap
+            while j >= 0 and nums[j] > tmp:
+                nums[j+gap] = nums[j]
+                j -= gap
+            nums[j+gap] = tmp
+        gap = math.floor(gap/3)
+    return nums
+
+5.归并排序 -- TC:O(NlogN), SC:O(N), 稳定
+步骤：采用分治思想，将数组不断二分为最小子数组，然后对子数组不断排序合并重组出完整的数组
+实现：自上而下递归；自下而上迭代(推荐)
+源码：
+def mergeSort(nums):
+    import math
+    if len(nums) < 2:
+        return nums
+    middle = math.floor(len(nums)/2)
+    left, right = nums[0:middle], nums[middle:]
+    return merge(mergeSort(left), mergeSort(right))
+
+def merge(left, right):
+    result = []
+    while left and right:
+        if left[0] <= right[0]:
+            result.append(left.pop[0])
+        else:
+            result.append(right.pop[0])
+    while left:
+        result.append(left.pop[0])
+    while right:
+        result.append(right.pop[0])
+    return result
+
+6.快速排序 -- TC:O(NlogN), SC:O(logN), 不稳定
+快排是在冒泡排序基础上的分治法，优于一般的对数复杂度算法（因为常数因子较小），且出现最坏情况O(N^2)的可能性很低（需要逆序数组）。通常默认使用快排算法。
+步骤：随机抽出一个元素作为基准(pivot)，将数列划分为小于基准和大于基准两部分，再递归地从子序列中选出子基准划分更小的序列，直到不能再划分为止。由于划分后的子序列不断变小，需要比较的空间也呈指数级减少。
+源码：
+def quickSort(nums, left=None, right = None):
+    left = 0 if not isinstance(left, (int, float)) else left
+    right = len(nums)-1 if not isinstance(right, (int, float)) else right
+    if left < right:
+        partitionIndex = partition(nums, left, right)
+        quickSort(nums, left, partitionIndex-1)
+        quickSort(nums, partitionIndex+1, right)
+    return nums
+
+def partition(nums, left, right):
+    pivot = left
+    index = pivot + 1
+    i = index
+    while i <= right:
+        if nums[i] < nums[pivot]:
+            swap(nums, i, index)
+            index += 1
+        i += 1
+    swap(nums, pivot, index-1)
+    return index-1
+
+def swap(nums, i, j):
+    nums[i], nums[j] = nums[j], nums[i]
+
+
 
 1.归并排序
 2.快速排序
