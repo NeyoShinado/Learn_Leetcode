@@ -1,4 +1,5 @@
 # ---------------------------------------------
+#### 笔试
 ## 不同类型题目
 ### 考点内容
 题号前 + '*'代表未完成，+ '!'代表要回顾
@@ -60,6 +61,7 @@ python 默认递归深度小于1000，做DFS会比C吃亏，可通过sys.setrecu
 1.list作为中间变量或赋值时，要用.copy()浅复制，不然任何的改动都会影响其他赋值的变量；
 2.list循环中删除多个变量时，若删除下标有序，从大往小顺序删除能避免删除元素索引的错位；
 3.*list的提取和删除；
+4.注意使用[[]] * N这种多维数组创建方式，新建的各个[]是共享内存的。.append()方法能暴露出其问题；
 
 
 ### python set,dict⭐
@@ -246,7 +248,7 @@ def merge(left, right):
     return result
 
 6.快速排序 -- TC:O(NlogN), SC:O(logN), 不稳定
-快排是在冒泡排序基础上的分治法，优于一般的对数复杂度算法（因为常数因子较小），且出现最坏情况O(N^2)的可能性很低（需要逆序数组）。通常默认使用快排算法。
+原理：快排是在冒泡排序基础上的分治法，优于一般的对数复杂度算法（因为常数因子较小），且出现最坏情况O(N^2)的可能性很低（需要逆序数组）。通常默认使用快排算法。
 步骤：随机抽出一个元素作为基准(pivot)，将数列划分为小于基准和大于基准两部分，再递归地从子序列中选出子基准划分更小的序列，直到不能再划分为止。由于划分后的子序列不断变小，需要比较的空间也呈指数级减少。
 源码：
 def quickSort(nums, left=None, right = None):
@@ -272,6 +274,86 @@ def partition(nums, left, right):
 
 def swap(nums, i, j):
     nums[i], nums[j] = nums[j], nums[i]
+
+7.堆排序 -- TC:O(NlogN), SC:O(1), 不稳定
+步骤：创建一个堆，不断shiftdown() ，然后将堆首推出，堆的尺寸减一，直至排序完毕。
+源码：
+def buildMaxHeap(arr):
+    import math
+    for i in range(math.floor(len(arr)/2), -1, -1):
+        heapify(arr, i)
+
+def heapify(arr, i):
+    left = 2*i + 1
+    right = 2*1 + 2
+    largest = i
+    if left < arrLen and arr[left] > arr[largest]:
+        largest = left
+    if right < arrLen and arr[right] > arr[largest]:
+        largest = right
+    if largest != i:
+        swap(arr, i, largest)
+        heapify(arr, largest)
+
+def swap(arr, i, j):
+    arr[i], arr[j] = arr[j], arr[i]
+
+def heapSort(arr):
+    global arrLen
+    arrLen = len(arr)
+    buildMaxHeap(arr)
+    for i in range(len(arr)-1, 0, -1):
+        swap(arr, 0, i)
+        arrLen -= 1
+        heapify(arr, 0)
+    return arr
+
+# ------ 以上算法都为比较排序算法 ------ #
+容器的不同用法：
+①计数排序：根据键值分配桶；
+②桶排序：根据范围分配桶；
+③基数排序：根据键值的位来分配桶；
+
+8.计数排序 -- TC:O(N+K), SC:O(K), 稳定
+前提：要求知道输入整数数据的确定范围(明确大小的基数，字符串之类具有可比较性的对象则不行)
+原理：开辟额外数组空间，统计每个数出现的频数，再反向填充目标数组；基数范围小时很快
+源码：
+def countingSort(arr, maxVal):
+    bucketLen = maxValue + 1
+    bucket = [0] * bucketLen
+    arrLen = len(arr)
+
+    for i in range(arrLen):
+        if not bucket[arr[i]]:
+            bucket[arr[i]] = 0
+        bicket[arr[i]] += 1
+
+    sortedIndex = 0
+    for j in range(bucketLen):
+        while bucket[j] > 0:
+            arr[sortedIndex] = j
+            sortedIndex += 1
+            bucket[j] -= 1
+    return arr
+
+9.桶排序 -- TC:O(N+K), SC:O(N+K), 稳定
+原理：是计数排序的改进，利用映射函数将数据存在不同的桶中，然后再对桶内元素进行比较排序；桶的数量越多，数据分得越均匀，速度越快
+# 例：对小数进行桶排序
+def bucketSort(arr, max_num):
+    buf = {i:[] for i in range(int(max_num)+1)}
+    N = len(arr)
+    for i in range(N):
+        buf[int(arr[i])].append(arr[i])
+    arr = []
+    for i in range(len(buf)):
+        if buf[i]:
+            arr.extend(sorted(buf[i]))
+    return arr
+
+10.基数排序 -- TC:O(N*K), SC:O(N+K), 稳定
+原理：将数据按位数切割为不同部分，然后按照位数分别进行比较。因而能处理字符串、浮点数等数据类型
+如：按高位至低位的顺序进行桶排序，完成十进制数的排序。
+
 
 
 
