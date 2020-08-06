@@ -46,8 +46,13 @@ Usage::
 >>> s.mount('http://', a)
 """
 
+
+### python 递归上限⭐
+python 默认递归深度小于1000，做DFS会比C吃亏，可通过sys.setrecursionlimit(10000000) 手动修改，如果仍然TLE 就需要剪枝优化了。
+
+
 ### python 类内函数
-类下函数定义需添加self参数，使用时python自动为self赋值而不需自己赋值。
+同类方法函数间调用要添加self参数，使用时python自动为self赋值而不需自己赋值。
 原因：创建一个类MyClass，示例化后得到MyObject对象。调用对象方法时MyObject.method(arg1, arg2)，python会自动将其转为Myclass.method(MyObject, arg1, arg2)
 
 
@@ -139,6 +144,12 @@ N个气球上标有不同的数字，存在数组nums中。戳破第i个气球�
 3.*functools.lru_cache缓存函数结果，加快递归速度
 4.√python循环式生成列表
 5.!动态规划中不同子结构的构建方式，能避免递归的使用(从而避免爆栈)。如此题的自下向上构型，每层所需的状态都已生成好，避免了递归的嵌套结构。
+
+
+
+
+### Greedy/贪心算法
+贪心算法跟动态规划很相似，不过动态规划的状态转移是由多个状态确定的；而贪心算法则是由一个状态(局部最优)确定的。
 
 
 
