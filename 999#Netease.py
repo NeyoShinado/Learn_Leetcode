@@ -47,10 +47,10 @@ if __name__ == "__main__":
     t.ascendHeap()
 
 
-# 跳桩
-#! usr/etc/bin python
-#coding: utf-8
+#*跳桩
+# Version1
 # DFS
+# 超时
 import sys
 sys.setrecursionlimit(100000000)
 
@@ -87,3 +87,108 @@ class Solution:
 if __name__ == "__main__":
     t = Solution()
     t.jumpStand()
+
+
+# Version2
+# DP
+# Not pass
+# #! usr/etc/bin python
+#coding: utf-8
+# DFS
+class Solution:
+    def jumpStand(self):
+
+        # input
+        T = int(input())
+        # main loop
+        for t in range(T):
+            N, k = list(map(int, input().split(" ")))
+            H = list(map(int, input().split(" ")))
+
+            # init
+            dp = [[False] * N for _ in range(2)]  # 行表示buff状态，值表示能否到达
+            dp[0][0], dp[1][0] = True, True
+            end = 1
+
+            # DP
+            while end < N:
+                index = end - 1
+                while not dp[1][end] and index >= max(0, end-k):
+                    if H[end] <= H[index]:
+                        dp[1][end] |= dp[1][index]
+                    index -= 1
+                failCnt = end - index - 1
+
+                index = end - 1
+                while not dp[0][end] and index >= max(0, end-k):
+                    if H[end] <= H[index]:
+                        dp[0][end] |= dp[0][index]
+                    else:
+                        dp[0][end] |= dp[1][index]
+                    index -= 1
+                failCnt = max(end - index - 1, failCnt)
+
+                # 如果不能跳的长度==K，后面的也不可能达到，返回False
+                if failCnt >= k:
+                    break
+
+                end += 1
+
+            if dp[0][-1] or dp[1][-1]:
+                print("YES")
+            else:
+                print("NO")
+
+
+
+if __name__ == "__main__":
+    t = Solution()
+    t.jumpStand()
+
+
+# Version3
+# 多状态DP
+# 0表示不能到达，1表示有buff到达，2表示无buff到达
+# 同样Not Pass
+class Solution:
+
+    def main(self):
+
+        def jump(H, dp, N, k, buff):
+            for i in range(1, N):
+                # 直接跳
+                for j in range(i-1, max(i-k, 0), -1):
+                    if dp[j] == 1 and H[j] >= H[i]:
+                        dp[i] = 1
+                        break
+                if dp[i] == 1:
+                    continue
+                # buff跳
+                for j in range(i-1, max(i-k, 0), -1):
+                    if buff and dp[j] == 1 and H[j] < H[i]:
+                        dp[i] = 1
+                        break
+                    elif dp[j] == 2 and H[j] >= H[i]:
+                        dp[i] = 2
+                        break
+
+            return dp[-1] == 1 or dp[-1] == 2
+
+        T = int(input())
+        for t in range(T):
+            N, k = list(map(int, input().split(" ")))
+            H = list(map(int, input().split(" ")))
+
+            #init
+            dp = [0] * N
+            dp[0] = 1
+            buff = 1
+
+            if jump(H, dp, N, k, buff):
+                print("YES")
+            else:
+                print("NO")
+
+if __name__ == "__main__":
+    t = Solution()
+    t.main()
