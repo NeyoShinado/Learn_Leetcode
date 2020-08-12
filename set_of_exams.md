@@ -54,8 +54,18 @@ Usage::
 """
 
 
-### python 递归上限⭐
+### python 配置递归上限⭐
 python 默认递归深度小于1000，做DFS会比C吃亏，可通过sys.setrecursionlimit(10000000) 手动修改，如果仍然TLE 就需要剪枝优化了。
+
+
+### python 缓存装饰器
+functools模块的lru_cache装饰器记录函数调用的缓存结果，重复运行的函数直接返回缓存结果，不执行函数体。
+使用方式：
+from functools import lru_cache
+@lru_cache(maxsize=2n, typed=False) 或@lru_cache(None)
+def fun(...):
+    ...
+调用fun函数时就会自动查询缓存
 
 
 ### python 类内函数
