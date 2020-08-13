@@ -131,34 +131,10 @@ if __name__ == "__main__":
 	t.maxVal()
 
 
-## 系统开发
-# T2
-class Solution:
-	def strSum(self):
-		# init
-		frac = False
-		res = 0
-		
-		for i in range(2):
-			tmp = input()
-			for char in tmp:
-				if char == ".":
-					frac = True
-
-			if frac:
-				res += float(tmp)
-			else:
-				res += int(tmp)
-
-		print(str(res))
-
-if __name__ == "__main__":
-	t = Solution()
-	t.strSum()
-
-
+#### 2020 系统开发
 # T3
-# Greed
+# 相邻石堆合并，累计和最小
+# 区间DP
 class Solution:
 	def minCost(self):
 		# input
@@ -186,6 +162,9 @@ if __name__ == "__main__":
 
 
 # T4
+# 字符串集最小前缀
+# Version0
+# 字符串排序后比较
 class Solution:
 	def uniquePrefix(self):
 		# input
@@ -220,6 +199,43 @@ class Solution:
 		for i in range(N):
 			print(prefixArr[indexDict[arr[i]]])
 
-if __name__ == "__main__":
-	t = Solution()
-	t.uniquePrefix()
+
+# Version1
+# 维护前缀树(字典树)
+class Solution:
+	def __init__(self):
+		self.pretree = {}
+	def inset(self, string):
+		# 浅拷贝变量，任何改变会累计到原始变量上
+		tmp = self.pretree
+		for char in string:
+			if char not in tmp:
+				tmp[char] = {}
+			tmp = tmp[char]
+	def core(self, string):
+		tmp = self.pretree
+		res = ""
+		for char in string:
+			if char in tmp:
+				res += char
+				tmp = tmp[char]
+			else:
+				res += char
+				return res
+		return res
+
+# main
+N = int(input())
+strings = []
+res = []
+for i in range(N):
+	strings.append(input())
+for string in strings:
+	a = Solution()
+	for string_else in strings:
+		if string == string_else:
+			continue
+		a.inset(string_else)
+	res.append(a.core(string))
+for x in res:
+	print(x)
