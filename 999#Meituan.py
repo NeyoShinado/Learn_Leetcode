@@ -165,6 +165,7 @@ if __name__ == "__main__":
 # 字符串集最小前缀
 # Version0
 # 字符串排序后比较
+'''
 class Solution:
 	def uniquePrefix(self):
 		# input
@@ -198,6 +199,7 @@ class Solution:
 		# res output
 		for i in range(N):
 			print(prefixArr[indexDict[arr[i]]])
+'''
 
 
 # Version1
