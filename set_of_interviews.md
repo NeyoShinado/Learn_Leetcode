@@ -473,23 +473,199 @@ Shell脚本是管理员完成日常任务的文本文件。
 功能：创建文件同步链接，节省空间
 参数：-b 覆盖以前的链接；-s 创建软链接
 
-(9)locate
+(9)more
+功能：类似cat，以页显示方式阅读
 
+(10)mv
+功能：移动或重命名文件，若文件名相同可以覆盖
 
+(11)rm
+功能：删除文件，+ “-r” 删除目录；rm删除后的文件通常还能恢复
+
+(12)tail
+功能：查看文件末尾，+ “-f” 循环读数
+
+(13)touch
+功能：修改文件目录的时间属性，不存在则创建文件
+
+(14)whereis
+功能：只能搜索程序的二进制文件、man说明文件和源码文件。whereis和locate都基于内建数据库进行搜索的，比find遍历硬盘要快。
+
+(15)which
+功能：搜索系统命令是否存在PATH中，返回第一个结果
+Summary：①which 查看PATH指令的可执行文件位置；②whereis 查看指令的文件位置；③locate 配合数据库查看文件位置；④find 通过硬盘查找文件；⑤>echo $PATH 查看环境变量
 
 
 ## 文件编辑命令
+>Summary:
+grep 适合单纯查找匹配文本；sed 适合编辑匹配到的文本；awk 适合对文本作格式化处理；
+
+**(1.1)grep
+功能：文本搜索指令--全局正则搜索(Global Regular Expression Print)，搜索文件或标准输入符合模式的文本，结果行送到标准输出。
+格式：grep [option] pattern file/dir
+常用参数：
+-A n --after-context显示匹配字符后n行
+-B n --before-context显示匹配字符前n行
+-C n --context 显示匹配字符前后n行
+-c --count 计算符合样式的列数
+-i 忽略大小写
+-l 只列出文件内容符合指定的样式的文件名称
+-f 从文件中读取关键词
+-n 显示匹配内容的所在文件中行数
+-R 递归查找文件夹
+-v 显示不包含匹配文本的行
+正则表达式：
+①[^]：匹配不在指定范围内的字符
+②x\{m\}：重复字符x，m次
+③x\{m,\}：重复字符x,至少m次
+④x\{m,n\}  #重复字符x，至少m次，不多于n次
+⑤\w：匹配文字和数字字符，也就是[A-Za-z0-9]  
+⑥\W：\w的反置形式，匹配一个或多个非单词字符
+⑦\b：单词锁定符
+
+
+**(1.2)sed
+功能：处理编辑一个或多个文件
+格式：sed [-hnV] [-e<script>] [-f<script>] [文本文件]
+    -e<script> 以指定的script处理输入文本
+    -f<script> 以指定的script文件处理输入文本
+script操作说明：①a--下一行拼接字符串；②c--取代n1，n2之间的行；③d--删除；④i--上一行插入字符串；⑤p--打印；⑤s--搭配正则模型替换；
+用例：
+①在第4行添加一行内容 >sed -e 4a\newLine testfile
+②删除3行以后内容 >sed '3,$d' testfile
+③新增隔换行内容，script文本内换行前加上'\' 
+>sed '2a Drink tea or .../
+>drink beer' testfile
+④行的替换 >sed '2,5c No text' testfile
+⑤删除包含内容项的行 >sed '/root/d' testfile
+⑥执行{}组合命令 >sed '/root/{s/bash/blueshell/;p;q}'   #替换内容后显示，最后退出
+⑦以行为单位进行部分数据替换 >sed 's/要被替换的字符串/新的字符串/g'
+⑧-e表示多点编辑。>sd -e '3,$d' -e 's/bash/blueshell/'   #先删除，后替换
+⑨直接修改文件内容(危险操作)：-i >sed -i '$a # This is the end.' testfile 给文件最后行加上内容
+
+
+**(1.3)awk
+功能：处理文本文件语言，强大文本分析工具
+格式：awk [opt] '{[pattern] action}' var=value {filenames}
+内建变量是awk预定义好的变量，主要如下：
+①FS：字段分隔符，默认空格
+②OFS：输出字段分隔符，默认空格
+③RS：输入记录分隔符(换行符)
+④ORS：输出换行符
+⑤NF：当前行字段数(列数)
+⑥NR：行号，文本行行号
+⑦$n：第n个字段
+⑧$0：所有记录行
+运算符：
+①赋值： = += -= /= %= ^= **=
+②条件表达： ?:
+③匹配、不匹配正则表达式：~ !~
+④关系运算符：< <= > >= != ==
+⑤连接： 空格
+⑥求幂：^ ***
+⑦字段引用：$
+⑧包含：in
+用例：
+①每行按空格或tab分割，输出1、4项  >awk '{print $1,$4}' testfile
+②指定多个内置变量(' ' ',')为分隔符  >awk -F'[ ,]' '{print $1,$2}' testfile
+③设置变量  >awk -v a=1 '{print $1, $1+a}' testfile
+④-f 参数调用awk脚本处理  >awk -f {awk脚本} testfile
+⑤过滤第一列大于2的行  >awk '$1>2' testfile
+⑥匹配正则表达式，~模式开始，/模式内容/  >awk '$2 ~/th/ {print $2,$4}' testfile
+⑦
+
+
+(2)wc
+功能：统计指定文件的字节、行、字符、词数
 
 
 ## 磁盘管理命令
+(1)cd
+功能：路径切换
+用法：①cd / 根目录；②cd ~ home目录；③cd - 进入上次工作路径
+
+(2)df
+功能：显示文件系统磁盘空间使用情况
+
+(3)du
+功能：查看文件、目录的磁盘空间使用情况
+
+(4)ls
+功能：查看文件信息
+参数：-r 逆序排列；-t 修改时间排序；-S 大小排序；
+
+(5)mkdir
+功能：创建目录，-p 参数允许创建路径中的目录不存在，会自动创建补全
+
+
+## 网络通讯命令
+(1)ifconfig
+功能：查看配置网络接口
+用法：①查看所有网络接口>ifconfig -a；②启动或停止某个接口>ifconfig eth0 up/down
+
+(2)iptables
+功能：配置防火墙，开放端口
+用法：
+①拒绝IP912.168.1.101访问本机80端口>iptables -I INPUT -s 192.168.1.101 -p tcp --dport 80 -j REJECT；
+②开启80端口(web默认对外端口)>iptables -A INPUT -p tcp --dport 80 -j ACCEP;
+③保存配置>iptables save
+
+(3)netstat
+功能：显示网络状态
+参数：-a 显示所有连线的Socket；-n 直接使用IP地址而不是域名服务器；-p 显示正在使用Socket的程序识别码和程序名；-l 显示监控中的服务器Socket
+实操：
+①统计当前进程连接数>nestat -an | grep ESTABLISHED | wc -l
+②查看系统开启的端口>netstat -lnp
+③查看连接到80端口状态链接的个数>netstat -an | grep ESTABLISHED
+
+(4)ping
+功能：使用ICMP传输协议检测远端主机的网络功能
+使用：>ping -c 2 www.baidu.com
+
+(5)telnet
+功能：登入远端主机
 
 
 ## 系统管理命令
+(1)date
+功能：显示或设定系统时间
+使用：显示下一天日期>date +%Y%m%d --date="+1 day"
+
+(2)free
+功能：显示内存使用情况，包括物理内存、交换区内存和内核缓冲区，默认kb单位
+参数：-s<间隔秒> 持续间隔显示；-t 统计总和
+
+(3)ps
+功能：查看当前进程运行状态；动态查询结果使用>top；
+进程状态码：①运行R；②中断S；③不可中断D；④僵死Z；⑤停止T；
+
+(4)kill
+功能：发送指定信号终止进程。默认信号-15，无法终止可用-9强制终止。
+
+(5)top
+功能：动态显示执行进程的信息。进程ID、内存占用率、CPU占用率。支持交互命令。
+前五行显示信息：
+①任务队列信息：当前系统时间、系统持续运行时间、登录用户数、load average--1分钟、5分钟、15分钟的负载情况（除以逻辑CPU大于5表明超负荷运转）；
+②进程情况：总任务数以及各状态任务数统计信息；
+③cpu占用百分比状态信息：us--用户空间、sy--内核空间、ni--改变过优先级的进程、id--空闲CPU、wa--IO等待、hi--硬中断、si--软中断；
+④内存状态：total--总物理内存、used--使用中内存、free--空闲内存、buffers--缓存内存；
+⑤swap交换区信息：total、used、free、cached
+进程状态监控：PR--进程优先级、NI--负值表高优先级，正值表低优先级。
 
 
 ## 备份压缩命令
+(1)bzip2
+用法：①创建.bz2压缩文件 >bzip2 _filename_；②解压.bz2文件 >bzip2 -d _filename_
 
+(2)gzip
+用法：①创建.gz文件 >gzip _filename_；②解压.gz文件 >gzip -d _filename_；③显示压缩比率 >gzip -l _filename_
 
+(3)tar
+功能：tar本身只有打包功能，压缩及解压是调用其他功能完成的。
+参数：①-c 建立新压缩文件；②-f 指定压缩文件；③-x 解压；④-u 添加更改了和现有的文件到压缩包；⑤-z gzip压缩；⑥-j bzip2压缩
+
+(4)unzip
+功能：①解压zip文件 >unzip _filename_；②查看zip文件内容 >unzip -l _filename_
 
 
 #### Base/编程算法
