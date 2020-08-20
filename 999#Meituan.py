@@ -241,3 +241,209 @@ for string in strings:
 	res.append(a.core(string))
 for x in res:
 	print(x)
+
+# T4
+import sys
+from functools import lru_cache
+
+sys.setrecursionlimit(10000000)
+
+class Solution:
+
+    def maxScore(self):
+        # input
+        #N = int(input())
+        #arr = [list(map(int, input().split())) for _ in range(N)]
+        N = 3
+        arr = [[1.08, 1.25, 1.5], [1.5, 1.35, 1.75], [1.22, 1.48, 2.5]]
+        vis = []
+
+        #@lru_cache(None)
+        def DFS(vis, node):
+            level = len(vis)
+            if level == N:
+                return [0, [vis.pop()]]
+
+            # init
+            vis.append(node)
+            partRes = 0
+            solution = []
+            for i in range(N):
+                if i not in vis:
+                    tmpRes, tmpSolution = DFS(vis, i)
+                    if tmpRes > partRes:
+                        partRes = tmpRes
+                        solution = tmpSolution
+            if level > 0:
+                partRes += arr[level-1][node]
+            return [partRes, solution.insert(0,node)]
+
+        res, callList = DFS(vis, None)
+
+        return [res, callList]
+
+if __name__ == "__main__":
+    t = Solution()
+    res, callList = t.maxScore()
+    print('%.2f' %res)
+    for i in range(len(callList)):
+        print(" ".join([str(i), str(callList[i])]))
+
+
+# T
+# 无环图的最小遍历步数
+# input
+N = int(input())
+graph = dict()
+for i in range(N-1):
+    x, y = map(int, input().split())
+    if x not in graph:
+        graph[x] = [y]
+    else:
+        graph[x].append(y)
+    if y not in graph:
+        graph[y] = [x]
+    else:
+        graph[y].append(x)
+
+# init
+candid = []
+for i in graph.keys():
+    if len(graph[i]) == 1:
+        candid.append(i)
+
+# BFS
+for start in candid:
+    queue = [[{start}, start, 0]]
+    res = float('inf')
+    while queue:
+        vis, node, cnt = queue.pop()
+        if len(vis) == N:
+            res = min(res, cnt)
+            break
+        # 会往返叠堆同一对节点造成死循环
+        for nextNode in graph[node]:
+            newVis = vis.copy()
+            newVis.add(nextNode)
+            queue.append([newVis, nextNode, cnt+1])
+
+print(res)
+
+
+# T
+# 01字符串k位补零的最大连续1位
+# # Version0
+
+def maxConseOne():
+    # input
+    N, k = list(map(int, input().split()))
+    s = list(map(int, input().split()))
+
+    # init
+    N = len(s)
+    seq = []
+    res = 0
+    l = -1
+    for r in range(N):
+        if s[r] == 0:
+            seq.append(r-l-1)
+            l = r
+        if r == N-1:
+            if s[r] != 0:
+                seq.append(r-l)
+            if s[r] == 0:
+                seq.append(0)
+
+    if seq is None:
+        return N
+
+    # windows
+    Nseq = len(seq) - 1   # 0 的数量
+    if Nseq <= k:
+        return N
+
+    for l in range(1, Nseq-k+1):
+        r = l+k-1
+        res = max(res, sum(seq[l-1:r+1])+k)
+
+    return res
+
+res = maxConseOne()
+print(res)
+
+
+# T
+# 似乎能用单调栈
+# 划分山峰与山谷数组后再使用分治
+# input
+N = int(input())
+arr = list(map(int, input().split()))
+
+
+# 高程图两端一定以山峰结束，状态1表上升，2表下降
+if N == 1:
+    print(N)
+
+# init
+nums = []
+state = 0
+for i in range(1, N):
+    if state == 0 and arr[i] > arr[0]:
+        state = 1
+        continue
+    elif state == 0 and arr[i] < arr[0]:
+        state = 2
+        continue
+
+    # up
+    if state == 1 and arr[i] >= arr[i-1]:
+        continue
+    # down
+    elif state == 2 and arr[i] <= arr[i-1]:
+        continue
+    # heap
+    elif state == 1 and arr[i] < arr[i-1]:
+        nums.append(arr[i-1])
+        state = 2
+        continue
+    # valley
+    elif state == 2 and arr[i] > arr[i-1]:
+        nums.append(arr[i-1])
+        state = 1
+        continue
+
+if nums[0] != arr[0]:
+    nums.insert(0, arr[0])
+if nums[-1] != arr[-1]:
+    nums.append(arr[-1])
+
+def divideSum(nums):
+    if not nums:
+        return 0
+    Nnode = len(nums)
+    least = nums[0]
+
+    # find min valley
+    for i in range(1, Nnode):
+        if nums[i] < least:
+            least = nums[i]
+
+    cnt = least
+    left = 0
+    # recurse cnt
+    for i in range(Nnode):
+        nums[i] -= least
+        if nums[i] == 0:
+            cnt += divideSum(nums[left:i])
+            left = i+1
+    if nums[Nnode-1] != 0:
+        cnt += divideSum(nums[left:Nnode])
+
+    return cnt
+
+# main
+if len(nums) <= 2:          # *
+    res = max(nums)
+else:
+    res = divideSum(nums)
+print(res)
