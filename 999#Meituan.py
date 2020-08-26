@@ -1,3 +1,4 @@
+# 2020实习春招
 # T1
 class Solution:
 	def Fast(self):
@@ -132,7 +133,7 @@ if __name__ == "__main__":
 
 
 #### 2020 系统开发
-# T3
+# T7
 # 相邻石堆合并，累计和最小
 # 区间DP
 class Solution:
@@ -161,7 +162,7 @@ if __name__ == "__main__":
 	t.minCost()
 
 
-# T4
+# T6
 # 字符串集最小前缀
 # Version0
 # 字符串排序后比较
@@ -290,49 +291,89 @@ if __name__ == "__main__":
         print(" ".join([str(i), str(callList[i])]))
 
 
-# T
+# T12
+# 火星文字母排序
+
+
+
+# T13
 # 无环图的最小遍历步数
-# input
-N = int(input())
-graph = dict()
-for i in range(N-1):
-    x, y = map(int, input().split())
-    if x not in graph:
-        graph[x] = [y]
-    else:
-        graph[x].append(y)
-    if y not in graph:
-        graph[y] = [x]
-    else:
-        graph[y].append(x)
+# Version0 
+# Not pass
+	N = int(input())
+	graph = dict()
+	for i in range(N-1):
+	    x, y = map(int, input().split())
+	    if x not in graph:
+	        graph[x] = [y]
+	    else:
+	        graph[x].append(y)
+	    if y not in graph:
+	        graph[y] = [x]
+	    else:
+	        graph[y].append(x)
 
-# init
-candid = []
-for i in graph.keys():
-    if len(graph[i]) == 1:
-        candid.append(i)
+	# init
+	candid = []
+	for i in graph.keys():
+	    if len(graph[i]) == 1:
+	        candid.append(i)
 
-# BFS
-for start in candid:
-    queue = [[{start}, start, 0]]
-    res = float('inf')
+	# BFS
+	for start in candid:
+	    queue = [[{start}, start, 0]]
+	    res = float('inf')
+	    while queue:
+	        vis, node, cnt = queue.pop()
+	        if len(vis) == N:
+	            res = min(res, cnt)
+	            break
+	        # 会往返叠堆同一对节点造成死循环
+	        for nextNode in graph[node]:
+	            newVis = vis.copy()
+	            newVis.add(nextNode)
+	            queue.append([newVis, nextNode, cnt+1])
+
+	print(res)
+
+# Version1
+from collections import defaultdict
+
+def minSteps():
+    # input
+    N = int(input())
+    d = defaultdict(list)
+    for i in range(N-1):
+        a, b = map(int, input().split())
+        d[a].append(b)
+        d[b].append(a)
+
+    # init
+    queue = [1]
+    visited = defaultdict(bool)
+    visited[1] = True
+    maxPath = 0
+
+    # BFS
     while queue:
-        vis, node, cnt = queue.pop()
-        if len(vis) == N:
-            res = min(res, cnt)
-            break
-        # 会往返叠堆同一对节点造成死循环
-        for nextNode in graph[node]:
-            newVis = vis.copy()
-            newVis.add(nextNode)
-            queue.append([newVis, nextNode, cnt+1])
+        tmp = []
+        while queue:
+            node = queue.pop()
+            for nextNode in d[node]:
+                if not visited[nextNode]:
+                    visited[nextNode] = True
+                    tmp.append(nextNode)    # 使用额外变量储存新一层的点，避免混淆
+        queue = tmp
+        maxPath += 1
+    print(2*(N-1) - maxPath + 1)
+    
+minSteps()
 
-print(res)
 
-
-# T
+# T14
 # 01字符串k位补零的最大连续1位
-# # Version0
+# Version0
+# 60%
 
 def maxConseOne():
     # input
@@ -371,11 +412,39 @@ def maxConseOne():
 res = maxConseOne()
 print(res)
 
+# Version1
+# 维护最多填补k个0的滑动窗口
+# input
+N, k = list(map(int, input().split()))
+arr = list(map(int, input().split()))
+#init
+l, r = 0, 0
+res = 0
+while r < N:
+	if arr[r] == 1:
+		r += 1
+	# arr[r] = 0 的情况
+	elif k > 0:
+		k -= 1
+		r += 1
+	# k 为0的情况，右指针不能再右移，开始移动左指针
+	else:
+		res = max(res, r-l)
+		# l为1的情况
+		while arr[l] == 1:
+			l += 1
+		# l跳过一个0，跨过左端一个连续区间，r开始移动一个连续区间
+		l += 1
+		r += 1
+res = max(res, r-l)
+print(res)
 
-# T
+
+# T15
 # 似乎能用单调栈
 # 划分山峰与山谷数组后再使用分治
-# input
+# Version0 
+# 部分AC
 N = int(input())
 arr = list(map(int, input().split()))
 
@@ -442,8 +511,106 @@ def divideSum(nums):
     return cnt
 
 # main
-if len(nums) <= 2:          # *
+# 单调栈
+# TC:O(N), SC:O(1)
+if len(nums) <= 2:          
     res = max(nums)
 else:
     res = divideSum(nums)
 print(res)
+
+# Version1
+def minPlant():
+    N = int(input())
+    nums = list(map(int, input().split()))
+
+    # init
+    stack = []
+    res = 0
+
+    if N == 1:
+        return nums[0]
+
+    for i in range(1, N):
+        if nums[i] >= nums[i-1]:
+            continue
+        else:
+            res += nums[i-1] - nums[i]
+    res += nums[-1]
+    return res
+
+print(minPlant())
+
+
+# T16 路由器覆盖信号
+# 差分问题
+# input
+N, K = list(map(int, input().split()))
+arr = list(map(int, input().split()))
+
+# init
+res = 0
+dp = [0 for _ in range(N+1)]    # N+1元素是暂存多余的右边界，防止信号提前中断
+for i in range(N):
+    # left edge
+    left = max(0, i - arr[i])
+    dp[left] += 1
+    # right edge
+    right = min(N, i + arr[i] + 1)
+    dp[right] -= 1
+
+# accsum
+tmp = 0
+for i in range(N):
+    tmp += dp[i]
+    if tmp >= K:
+        res += 1
+print(res)
+
+
+# T8 布尔表达式判定
+# 分类讨论
+def boolExp():
+    # input
+    s = input().split()
+    N = len(s)
+
+    if N % 2 == 0:
+        return "error"
+
+    # init
+    stack = []
+    tmp = True
+    for i in range(N):
+
+        if i % 2 == 1 and s[i] not in ["and", "or"]:
+            return "error"
+        elif i % 2 == 0 and s[i] not in ["true", "false"]:
+            return "error"
+
+        if s[i] == "true":
+            tmp &= True
+        elif s[i] == "false":
+            tmp &= False
+        elif s[i] == "and":
+            continue
+        elif s[i] == "or":
+            stack.append(tmp)
+            tmp = True
+
+        if i == N-1:
+            stack.append(tmp)
+
+    # or operation
+    res = None
+    res = stack.pop()
+    while stack:
+        res |= stack.pop()
+
+    if res:
+        return "true"
+    else:
+        return "false"
+
+print(boolExp())
+

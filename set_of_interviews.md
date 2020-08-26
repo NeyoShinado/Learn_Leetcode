@@ -34,23 +34,168 @@
 Java实现的几种方法：
 ①wait()/notify()；②await()/signal()；③BlockingQueue阻塞队列；④信号量；⑤管道；
 
+
 (2)init方法与clinit方法的区别
+执行类构造器<clinit>()方法是类初始化的过程。
 详解<clinit>()方法由编译器按顺序自动收集类中类变量赋值语句和静态初始化块的语句组合而成；在执行子类<clinit>()方法时先执行父类<clinit>()方法；接口不能使用静态初始化块，但仍有变量初始化操作，因此也会生成<clinit>()方法。**但只有使用了父接口定义的变量时，执行接口<clinit>()方法才会先初始化父接口的<clinit>()方法；另，因为接口的变量都是static final常量，在准备阶段已经初始化了，所以初始化实现类时也不会执行接口的<clinit>()方法。
 ①执行时机不同：init 是对象构造器方法，执行new时调用该对象的constructor方法时才会执行init方法；而clinit是类构造器方法，jvm进行类加载--验证--解析--初始化中的初始化阶段会调用clinit方法。
 ②目的不同：init是实例构造器，初始化非静态变量；而clinit是class类构造器，初始化静态变量和静态代码块。
+③执行次数：在一个类的生命周期里，类构造器<clinit>()最多被JVM调用一次，实例构造器<init>()能被调用多次。
 
-(3)反射机制(reflact)
-程序运行时动态地调用类/对象的所有属性和方法的功能称为java的反射机制。
 
-(4)Java中的引用
+**(3)反射机制(reflact)
+①背景：反射机制是实现Java动态性的关键：Java程序运行，虚拟机要先加载Java类，生成.class文件。若加载不成功就无法编译，自然运行不了。(例如A程序需要B开发的类，但B类没完成，此时无法通过编译；或程序只有运行时才能根据具体环境加载依赖的类，用不到的类就不加载，这就需要动态性)。
+②定义：反射机制的起源是java.lang.Class类。每一个类加载后，JVM都会产生一个Class对象(类型类-Class对象是用来代表一个类型的实例)到堆中，作为方法区类的数据结构接口。通过class对象就能获取类的方法、成员、构造器以及修饰符。
+总的来说，就是程序运行时再探知、加载编译期间未知的.class文件，并获得类/对象的属性或方法，探知类的结构，这就是反射机制。
+③用法：
+# 类型类的获取
+public void TestClass{
+	...
+}
+TestClass testClass = new TestClass();
+testClass.getClass() == TestClass.class;    # 从对象或类型获取类型类的方法
+# 访问当前类及继承类的变量
+Class mClass = TestClass.class;    # 获取Class类实例
+mClass.getName();    # 获取类的名称
+Field[] fields = myClass.getFields();    # 获取public变量
+Field[] fields = myClass.getDeclaredFileds();    # 获取所有访问权限成员变量
+field.getModifiers();    # 获取变量访问权限
+field.getType().getName();	# 获取变量类型
+# 访问当前类及继承类的方法
+Method[] mMethods = mClass.getMethods();	# 获取public方法
+Method[] mMethods = mClass.getDeclaredMethods();    # 获取所有权限方法
+method.getReturnType();		# 获取方法的返回值类型
+method.getParameters();		# 获取方法的参数
+method.getExceptionTypes();		# 获取方法抛出的异常
+# 访问修改私有类的私有方法
+Method privateMethod = mClass.getDeclaredMethod("PrivateMethodName", String.class, int.class)    # 获取私有方法，第一个参数位私有方法名，第二个为方法参数的类型类
+privateMethod.setAccessible(true)    # 获取访问权限
+privateMethod.invoke(testClass, newStringPar, newIntPar)    # 通过invoke反射修改对象私有方法的参数
+# 访问修改私有类的私有变量
+Field privateField = mClass.getDeclaredField("privateFieldName")    # 获取对象私有变量
+privateField.setAccessible(true)    # 获取私有变量的访问权
+privateField.set(testClass, newPar)    # 通过set(object, val)修改变量值
+# 访问操作私有类的私有常量
+**①final修饰的基本类型及String常量在JVM编译.class文件时会被优化以提升效率：将引用常量的代码直接替换成常量值。(Integer, Long, Boolean等包装类和Object类则不会优化)
+所以通过反射修改常量虽然真的可以修改程序里常量的值，但是运行阶段还是直接使用原有的值，反射修改没意义，达到了“不能修改”的效果。
+②编译优化：
+> private final String Final_Value = "hello"
+> if Final_Value.equals("world")		# .java源文件
+> if "hello".equals("world")		# 编译后的.class文件
+③能修改运行常量值的情况
+情况一：Java运行常量声明时不赋值，留在构造器中赋值。由于new对象时才会调用构造器，所以此时的编译只会优化构造器中的赋值语句，取值语句还是指向常量而不是替换的值。所以能用反射机制修改常量。
+> class TestClass{
+	private final String Final_Value;
+	public TestClass(){
+		this.Final_Value = "Final";
+	}
+	public String getFinalValue(){
+		return this.Final_Value;
+	}
+}		# 构造器赋值，.java源文件
+> class TestClass{
+	private final String Final_Value = "Final";		# 构造器赋值语句被优化
+	public TestClass(){}
+	public String getFinalValue(){
+		return this.Final_Value;		# getter函数的赋值指向常量而非具体值
+	}
+}
+情况二：使用三目表达赋值而非直接的赋值语句，因为运行时的计算不会被编译器计算，也不会被优化。所以能通过反射修改。
+> private final String Final_Value = null == null? "Final": null;	# 效果等同于直接赋值的三目赋值语句
+
+
+**(4)Java中的引用
+引用类型保存的值是对象的内存地址，赋值运算只会写入新对象的地址。原有对象不会改变，也不被任何引用指向，称为“垃圾对象”，后续会被垃圾回收器回收。
+Java有四种引用类型：
+①强引用：Java最常见的引用，类似于"Object a = new Object()"这类引用，可以直接访问目标对象，强引用对象不会被垃圾回收器回收，可能导致内存泄漏；
+②软引用：
+③弱引用：
+④虚引用：
+
+
 (5)Java对象的创建过程
-(6)Java中创建子类实例时会创建父类实例？
+对象创建过程包含类初始化和类实例化两个阶段。
+①对象创建的方法：通过new关键字调用任意类构造器实现；通过Class类的newInstance(反射机制)调用无参构造器实现；使用java.lang.relect.Constructor类的newInstance(反射机制)创建，可以调用有参和私有的构造函数；使用clone方法创建实现Cloneable接口的对象，途中不会调用任何构造器；使用反序列机制创建实现Serializable接口的对象，同样不使用构造器；
+②创建过程：虚拟机分配内存存放实例变量，同时赋予默认值（0）。然后根据三种结构执行初始化(实例变量初始化、代码块初始化、构造器初始化)。为保证顺利初始化对象，显示调用父类构造器时要放在子类构造器的第一行。总的来说，类的实例化是一个递归过程：先向上递去探寻顶层父类，再向下归来初始化各相关类。
+**注：若子类重写了父类初始化用到的方法，子类初始化前的父类初始化，由于重写方法用到的子类变量仍没随着子类初始化而建立，所以会以默认值返回给父类初始化调用。
+总的来说，类实例化的一般过程是：父类的类/静态构造器<clinit>() -> 子类的类/静态构造器<clinit>() -> 父类的成员变量和实例代码块 -> 父类的构造函数 -> 子类的成员变量和实例代码块 -> 子类的构造函数。
+③其他：实例变量在对象初始化过程中最多能被赋值几次？第一次，JVM为对象分配完空间后给每一个实例变量赋默认值；第二次，初始化声明实例变量时的赋值操作；第三次，代码块的初始化操作；第四次，构造函数的初始化操作。
+类初始化需要在类实例化之前进行，但不意味着要类初始化结束后才能类实例化，实例化可以嵌套到静态构造器中与类初始化同时进行。
+
+#test# 最终输出的结果是什么
+public class StaticTest {
+    public static void main(String[] args) {
+        staticFunction();
+    }
+
+    static StaticTest st = new StaticTest();
+
+    static {   //静态代码块
+        System.out.println("1");
+    }
+
+    {       // 实例代码块
+        System.out.println("2");
+    }
+
+    StaticTest() {    // 实例构造器
+        System.out.println("3");
+        System.out.println("a=" + a + ",b=" + b);
+    }
+
+    public static void staticFunction() {   // 静态方法
+        System.out.println("4");
+    }
+
+    int a = 110;    // 实例变量
+    static int b = 112;     // 静态变量
+}/* Output: 
+        2
+        3
+        a=110,b=0
+        1
+        4
+ */
+
+
+(6)Java中创建子类实例时会创建父类实例吗？
+不会，创建子类实例所需的父类属性从方法区获得，存储的空间位于子类的堆内存，是属于子类实例的。
+
+
 (7)Java的类加载机制 为什么会出现锁机制？
+类加载机制分为五个部分：
+①加载：在内存中生成这个类的java.lang.Class对象，作为方法区这个类的数据入口；加载在JVM外部实现以便应用程序决定通过哪种类加载器获取类；
+②验证：确保Class文件的字节流包含的信息符合虚拟机要求；
+③准备：在方法区分配类变量的内存并设置初始值(基本类型为0，引用类型为null)，不过类变量若是final，编译器会为value生成ConstantValue属性，赋值为指定值；
+④解析：虚拟机将常量池中的符号引用替换为直接引用；
+⑤初始化：初始化阶段开始真正执行类中的Java代码，执行类构造器<clinit>方法的过程；
+
+
 (8)抽象类和接口的区别
+接口可以理解为一种比“抽象类”更抽象的类型；
+①语法层面上：抽象类可以提供成员方法实现的具体细节；变量可以是各种类型；可以有静态代码块和静态方法，接口不行；一个类只能继承一个抽象类，但可以实现多个接口；
+②设计层面上：抽象类是对整个事物的抽象，采用模板式设计，便于公共部分的更改；接口则是对类的局部行为进行抽象，采用辐射式设计，改动一个接口要对所有实现类进行改动。
+
+
 (9)双亲委派模型：启动加载器、扩展加载器、应用程序加载器
+①启动类加载器(Bootstrap ClassLoader)：加载JAVA_HOME\lib目录中的类；
+②扩展类加载器(Extension ClassLoader)：加载JAVA_HOME\lib\ext目录中的类；
+③应用程序类加载器(Application ClassLoader)：加载用户路径上的类。
+一个类收到类加载请求，会将这个请求委派给父类完成，所有加载请求都应该传到启动类加载器中。只有父类加载器无法完成请求时，子类加载器才会尝试加载。双亲委派的好处是无论使用哪个加载器加载，最终都委托给启动类加载器加载，保证了得到同样的Object对象。
+
+
 (10)重载与重写
+重写是子类对父类允许访问方法实现细节进行重写。返回值类型是原方法返回值的派生类，形参不变，访问权限只能更低。只能抛出父类异常及其子异常。重写体现父类子类的多态性；
+重载是一个类里方法名字相同、参数不同的现象；重载方法的返回值类型、访问修饰符、抛出异常可以不同；重载体现同一个类的多态性；
+
+
 (11)Java的类型擦除
+Java的泛型基本上在编译器中实现
+
+
 (12)简述Java Object类中的方法有哪些
+
+
 (13)char可以存储汉字嘛？
 (14)抽象类和接口的区别
 (15)静态分派与动态分派
@@ -681,12 +826,15 @@ script操作说明：①a--下一行拼接字符串；②c--取代n1，n2之间�
 #### Base/编程算法
 # ---------------------------------------------
 ### 1.排序算法
+排序本质就是消除逆序，随机数组的逆序数是O(N^2)级别的，采用交换相邻元素的规则一次只能消除一个逆序数，这是冒泡、插入排序不能突破O(N^2)下界的原因。交换相隔比较远的元素能消除更多的逆序，这就是希尔、快排、堆排等改进算法能提升的关键。
+稳定性定义：每次排序前后两个数的相对位置不变则算法稳定
+
 1.冒泡排序 -- TC:O(N^2), SC:O(1), 稳定
 步骤：指针不断右移，每次修正一对元素，最后一次修正交换的位置表示后面的元素已正确排序；重复直至没有元素交换发生。
 源码：
 def bubbleSort(nums):
-    for i in range(1, len(nums)):
-        for j in range(len(nums)-i):
+    for i in range(len(nums)-i):
+        for j in range(1, len(nums)):
             if nums[j] > nums[j+1]:
                 nums[j], nums[j+1] = nums[j+1], nums[j]
     return nums
@@ -716,17 +864,15 @@ def insertSort1(nums):
     return nums
 
 def insertSort2(nums):
-    for i in range(len(nums)):
+    for i in range(1, len(nums)):
         insertIndex = i-1
-        current = nums[i]
-        while insertIndex >= 0 and nums[insertIndex] > current:
+        while insertIndex >= 0 and nums[insertIndex] > nums[insertIndex+1]:
             nums[insertIndex+1] = nums[insertIndex]
             insertIndex -= 1
-        nums[insertIndex+1] = current
     return nums
 
 4.希尔排序 -- TC:O(NlogN), SC:O(1), 不稳定
-步骤：插入排序的改进版，插入排序在几乎排好序的数组中效率高，TC能达到O(N)。但对于一般分布的数据是低效的，一次遍历只移动一位。
+步骤：插入排序的改进版，由于有剪枝技巧，插入排序在几乎排好序的数组中效率高，TC能达到O(N)。但对于一般分布的数据是低效的，一次遍历只移动一位。
 希尔排序按不同的增量因子将数组分为若干子数组分别进行插入排序，等到整体“基本有序”时再进行插入排序。
 源码：
 def shellSort(nums):
@@ -748,6 +894,7 @@ def shellSort(nums):
 5.归并排序 -- TC:O(NlogN), SC:O(N), 稳定
 步骤：采用分治思想，将数组不断二分为最小子数组，然后对子数组不断排序合并重组出完整的数组
 实现：自上而下递归；自下而上迭代(推荐)
+流程：递出过程--数组的不断二分；归来过程--数组的不断排序合并
 源码：
 def mergeSort(nums):
     import math
@@ -849,7 +996,7 @@ def countingSort(arr, maxVal):
     for i in range(arrLen):
         if not bucket[arr[i]]:
             bucket[arr[i]] = 0
-        bicket[arr[i]] += 1
+        bucket[arr[i]] += 1
 
     sortedIndex = 0
     for j in range(bucketLen):
@@ -928,3 +1075,142 @@ res = a1 ^ a2 ^ ... ^ a2 ^ a1 ^ alone
 3.硬盘备份恢复
 硬盘分为N部分，最后一部分n用于备份，是由其他部分异或得到的。当某一部分a数据受损之后，就可以用其他部分异或恢复：a^b^...^(n-1) = n -> a^a^b^...^(n-1)^n^n =n^n^a=a
 
+
+### 2.树
+(1)树节点的定义：
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
+
+(2)先序遍历：
+def preorderTraversal(root):    # 递归实现
+    res = []
+    if not root:
+        return res
+    res.append(root.val)
+    res += preorderTraversal(root.left)
+    res += preorderTraversal(root.right)
+    return res
+
+def preorderTraversal(root): 	# 迭代实现
+    res = []
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        if not node:
+            continue
+        res.append(node.val)
+        stack.append(node.right)
+        stack.append(node.left)
+    return res
+
+## DFS
+(3)二叉树最大深度
+def maxDepth(root):
+    if not root:
+        return 0
+    return max(maxDepth(root.left)+1, maxDepth(root.right)+1)
+
+(4)二叉树镜像
+def mirrorTree(root):
+    if root:
+        root.left, root.right = mirrorTree(root.right), mirrorTree(root.left)
+        return root
+    else:
+    	return
+
+(5)**对称二叉树
+def isSymmetric(root):
+    if not root:
+        return True
+    return subMirror(root.left, root.right)
+
+def subMirror(root1, root2):
+    if not root1 and not root2:
+        return True
+    elif not root1 or not root2:
+        return False
+    elif root1.val != root2.val:
+        return False
+    # 可拆分为两子树的子问题
+    return subMirror(root1.left, root2.right) and subMirror(root1.right, root2.left)
+
+(6)路径总和
+# Version1
+# 嵌套递归查询路径和
+global res = []
+global candidSolution = []
+def pathSum(root, sum):
+	if not root:
+		return res
+	searchPath(root, sum)
+	searchPath(root.left, sum)			# 嵌套搜寻不同节点
+	searchPath(root.right, sum)
+
+
+def searchPath(node, target): 			# 搜寻以node为起点的子路径
+	if not node:
+		return roads
+	candidSolution.append(node.val)		# 维护当前路径
+	target -= node.val
+	if target == 0:
+		res.append(candidSolution)
+
+	searchPath(node.left, target)
+	searchPath(node.right, target)
+	del candidSolution[-1]				# 搜寻完本层要弹出当前节点回溯父节点的状态
+	
+# Version2
+# 字典+前缀和+回溯
+# 路径和一次遍历算完，减轻计算冗余
+# 不过由于该方法是快速搜索优化，适合统计数量，不适合统计路径方案
+def pathSum(root, sum):
+	mp = {}
+	mp[0] = 1
+	res = 0
+
+	def dfs(root, pathSum, target):
+		if not root:
+			return
+		pathSum += root.node
+		cnt = 0 if (pathSum-target) not in mp.keys() else mp[pathSum-target]
+		mp[pathSum] = 1 if pathSum not in mp.keys() else mp[pathSum]+1
+		cnt += dfs(root.left, pathSum, target)
+		cnt += dfs(root.right, pathSum, target)
+		mp[pathSum] -= 1 	# 遍历完当前节点要回溯
+		return cnt
+
+	res = dfs(root, 0, sum)
+	return res
+
+(7)重建二叉树
+def buildTree(preorder, inorder):
+	N = len(preorder)
+	if N == 0:
+		return None
+	root = TreeNode(preorder[0])
+	id = inorder.index(preorder[0])
+	Nleft = id
+	Nright = N-1-id
+	root.left = buildTree(preorder[1:id+1], inorder[:id])
+	root.right = buildTree(preorder[N-Nright:], inorder[id+1:])
+	return root
+
+(8)搜索最近公共祖先
+def LCA(root, p, q):
+    # 两点要么呈祖孙节点关系，要么呈左右子节点关系
+    # 利用递归层层归来的特性
+    # 有找到就返回点，找不到就返回空
+    if not root or root == p or root == q:
+        return root
+
+    left = LCA(root.left, p, q)
+    right = LCA(root.right, p, q)
+    if left and right:
+        return root
+
+    return left if left else right
+
+(9)序列化和反序列化
