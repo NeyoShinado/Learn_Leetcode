@@ -189,17 +189,47 @@ public class StaticTest {
 重载是一个类里方法名字相同、参数不同的现象；重载方法的返回值类型、访问修饰符、抛出异常可以不同；重载体现同一个类的多态性；
 
 
-(11)Java的类型擦除
-Java的泛型基本上在编译器中实现
+**(11)Java的类型擦除
+**泛型即参数化类型。是什么？
+Java的泛型基本上在编译器中实现，编译结束后会擦除Java的泛型
 
 
 (12)简述Java Object类中的方法有哪些
+①wait：让当前线程进入等待状态，也能释放当前线程的锁；
+②notify：唤醒当前对象上等待的单个线程； 
+③notifyAll：唤醒所有线程；
+④clone：克隆先给新对象分配内存，然后再将原对象的各个域填充到新对象域中，是深复制； 
+⑤hashcode：根据具体的哈希函数将对象的信息映射成一个散列值，在包含容器类中使用能减少equals方法的调用次数，提高检索性能；
+⑥equals：==可以理解为“浅对比”，即直接对比引用类型变量是否指向同一个对象地址；重写的equal方法往往用于实现“深对比”的作用，比较的是指向对象的内容；
+⑦toString：返回该对象的字符串表示，通常形式--“类名@此对象的无符号十六进制哈希码表示”；
+⑧finalize：清理本地对象占用的内存资源；
 
 
 (13)char可以存储汉字嘛？
+char是按字符存储的，可以存储Unicode字符集中的汉字。
+默认情况下unix平台，javac用utf-8格式读取java源文件，然后以utf-8格式写.class；默认情况下windows平台，javac用gbk格式读取java源文件然后以utf-8格式写.class；
+
+
 (14)抽象类和接口的区别
+略
+
+
 (15)静态分派与动态分派
+分派指的是java对方法的调用，即如何确定运行时方法的执行版本，是多态性的体现。重载是静态分派，重写是动态分派。
+重载在编译期间确定，执行重载方法的版本是按照参数的静态类型而不是实际类型作为分派依据。
+虚拟机的invokevirtual指令实现动态调用的解析过程：①找到对象的实际类型C；②查找类型C中常量描述符和名称相符的方法，并校验访问权限。通过则返回方法的直接引用；否则返回非法访问异常；③若类型C中没有符合的方法，按继承关系从下至上对父类进行查找；仍没找到就抛出抽象方法异常错误。
+方法重写的本质即调用invokevirtual把运行时常量池的符号引用解析为不同的直接引用。JVM通过在方法区中建立虚方法表来优化动态分派的频繁操作，通过方法表的索引替代元数据查找，直接对接地址入口。
+
+
 (16)HashMap与HashTable的区别
+HashMap和HashTable都提供键值映射服务，可以遍历视图，支持浅拷贝和序列化。不过HashTable已经被淘汰，不建议使用。
+①时间上：HashMap出现得较晚；
+②对外接口：两者都实现了Map,Clineable,Serializable三个接口。而HashMap继承自抽象类AbstractMap，HashTable继承自抽象类已经废弃的Dictionary；
+③对Null：HashMap支持null键和null值，将null的hashCode定为0。HashTable遇到null会抛出NullPointerException异常。
+④实现原理：
+
+
+
 (17)什么时候使用HashMap？它有什么特点？
 (18)HashMap的基本原理及内部数据结构
 (19)HashMap的put和get操作
@@ -1214,3 +1244,38 @@ def LCA(root, p, q):
     return left if left else right
 
 (9)序列化和反序列化
+from collections import deque
+class Codec:
+    def serialize(self, root):
+        if not root: return None
+        queue = deque()
+        queue.append(root)
+        res = ""
+        while queue:
+            node = queue.popleft()
+            if node:
+                res += str(node.val) + ","
+                queue.append(node.left)
+                queue.append(node.right)
+            else:
+                res += "None,"
+        return res
+
+    def deserialize(self, data):
+        if not data: return None
+        data = data.split(",")
+        root = TreeNode(data.pop(0))
+        queue = [root]
+        while queue:
+            node = queue.pop(0)
+            if data:
+                val = data.pop(0)
+                if val != "None":
+                    node.left = TreeNode(val)
+                    queue.append(node.left)
+            if data:
+                val = data.pop(0)
+                if val != "None":
+                    node.right = TreeNode(val)
+                    queue.append(node.right)
+        return root
