@@ -9,7 +9,7 @@
 (1)tree -- DFS,BFS  √
 (2)sequence -- sort√,
 (3)str
-(4)DP -- bags√,stocks√  
+(4)DP -- bags√,stocks √  
 (5)maze  
 (6)graph  
 
@@ -22,6 +22,12 @@
 1.弄清问题类型，根据场景选用合适算法和实现工具；
 2.写好伪代码，搭起逻辑框架；
 3.根据内容确定变量，端口以及边界条件；
+
+
+### 输入输出问题
+1.unix文本换行用"\n"，windows换行用"\r\n"，Mac用的则是"\r"；
+2.python sys.stdin.readline会一并读取到换行符，要另外用strip('\n')截取；建议用input();
+输出有print()和sys.stdout.write()两种，print()会自动追加"\n"，效果类似于sys.stdout.write(str+'\n')。
 
 
 ### 变量定义
