@@ -226,13 +226,57 @@ HashMap和HashTable都提供键值映射服务，可以遍历视图，支持浅�
 ①时间上：HashMap出现得较晚；
 ②对外接口：两者都实现了Map,Clineable,Serializable三个接口。而HashMap继承自抽象类AbstractMap，HashTable继承自抽象类已经废弃的Dictionary；
 ③对Null：HashMap支持null键和null值，将null的hashCode定为0。HashTable遇到null会抛出NullPointerException异常。
-④实现原理：
+**④初始容量上：HashTable是11，HashMap是16；HashMap的最大容量是2^30or1<<30(使用的类型为int，最高31位是符号位，容量不能为负，所以取不到)，默认负载因子都是0.75(泊松分布碰撞最小)；**
+扩容阈值：threshold = newCap * loadFactor;占用容量大于阈值开始扩容
+HashMap扩容源码：
+# 小于2^30
+static final int tableSizeFor(int cap){
+    int n = cap - 1;
+    n |= n >>> 1;
+    n |= n >>> 2;
+    n |= n >>> 4;
+    n |= n >>> 8;
+    n |= n >>> 16;
+    return (n<0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1；
+}
+# 大于2^30
+此时resize()最后一段会将阈值设为Integer.MAX_VALUE(0x7FFFFFFF)，所以这是**HashMap的实际最大容量**
 
+⑤HashTable每次扩容为2N+1(要求容量为素数或奇数)；HashMap为2N(且要求是2的幂)，目的是保证通过位操作模拟取余；
+⑥数据结构：都创建了一个继承自Map.Entry的私有内部类，每个Entry对象存储hash表中的键值对。
+Entry对象的四个属性：key--键；value--值；hash--键的hash值;entry--指向链表中的下一个Entry对象的引用；
+JDK1.7的HashMap采用数组+链表实现，通过链表处理冲突，缺点是hash值相等的元素较多时查询效率会不断降低。
+而JDK1.8的优化是，当桶中元素数目大于8时会将链表转为红黑树；
+**⑦算法：hash函数和扩容算法不同
+HashTable采用取模运算寻址 --> id = (hash & 0x7FFFFFFF) % tableLength，要求尽量使用素数、奇数容量使得取模哈希分布更加均匀。
+证：
+h=ag, m=bg, h=(a//b)m+res --> a=(a//b)b+(res//g)，左右都是整数，说明哈希和模有公约数g时，模的取值范围不是想象中的{0~m-1}，而是{0, k, ...,(m-1)g}，缩小了g倍，在处理等差数列等规则输入时可能会产生严重的哈希冲突，所以模设为素数(或公因子很少的数)就不会有这种事情发生了。
+HashMap则是通过位运算代替取模运算寻址--> 数组地址id = (Map容量-1) & hashCode = hashCode % 2^n。因为位运算直接操作内存数据，不需要转成十进制再运算，速度更快。但由于要求哈希表大小为2的幂，因为2^n-1相当于取所有低位作为地址，尽可能打散了数据；若用15之类的容量，15-1=14=0x1110，最后一位永远不会用到，造成空间浪费。
+**
+
+⑧线程安全：
+    HashTable加了synchronized锁，是线程安全的，但put,get效率会很差。
+    HashMap不是线程安全的，一方面是多线程对同一位置的put操作，另一方面是扩容方法可能形成环导致卡死；解决方法可以使用线程安全的ConcurrentHashMap或Collections.synchronizedMap()代替。
 
 
 (17)什么时候使用HashMap？它有什么特点？
-(18)HashMap的基本原理及内部数据结构
+HashMap时一个存储键值对的集合，是基于Map接口的实现。
+特点：可以接受null键值；无序的；非同步的；HashMap存储着Entry(hash,key,value,next)对象。
+
+
 (19)HashMap的put和get操作
+①put：
+首先根据元素hash值寻址。寻到址后判断数组是否为空，空就直接存进去，非空比对键值判断是否需要覆盖，不能覆盖就遍历链表/红黑树直到没有相同键值为止，此时再判断链表长度是否大于8，是的话就将链表转为红黑树。
+首先调用hash() 根据key生成一个hash值(null键hash为0)；
+然后调用putVal() 进行赋值，若表tab为空则调用resize()给tab和n赋值；
+接着根据位运算寻址，找出数组下标；
+若内容为空，就用newNode()创建entry对象并赋值；
+若内容非空，且发生键值冲突，就直接替换原内容；
+若发生位置冲突，则存进链表/红黑树中，若链表长度超出阈值，同时将其转变为树；
+②get：
+
+
+
 (20)简述Java中的深拷贝与浅拷贝，C++中的浅拷贝和深拷贝
 (21)解释一下static块和static变量的执行顺序
 (22)equals()的重写规则
@@ -276,7 +320,6 @@ synchronized和volatile的区别？
 哪些是线程安全的容器？
 ConcurrentHashMap介绍
 线程启动start和run
-HashMap为什么线程不安全？
 简述Java内存模型的happen before原则
 volatile的原理和实现机制 || volatile到底如何保证可见性和禁止指令重排序的？
 volatile关键字的两层语义 || 可见性
