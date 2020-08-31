@@ -245,7 +245,7 @@ static final int tableSizeFor(int cap){
 ⑤HashTable每次扩容为2N+1(要求容量为素数或奇数)；HashMap为2N(且要求是2的幂)，目的是保证通过位操作模拟取余；
 ⑥数据结构：都创建了一个继承自Map.Entry的私有内部类，每个Entry对象存储hash表中的键值对。
 Entry对象的四个属性：key--键；value--值；hash--键的hash值;entry--指向链表中的下一个Entry对象的引用；
-JDK1.7的HashMap采用数组+链表实现，通过链表处理冲突，缺点是hash值相等的元素较多时查询效率会不断降低。
+JDK1.7的HashMap采用数组+链表实现，通过链地址法处理冲突，缺点是hash值相等的元素较多时查询效率会不断降低。
 而JDK1.8的优化是，当桶中元素数目大于8时会将链表转为红黑树；
 **⑦算法：hash函数和扩容算法不同
 HashTable采用取模运算寻址 --> id = (hash & 0x7FFFFFFF) % tableLength，要求尽量使用素数、奇数容量使得取模哈希分布更加均匀。
@@ -274,25 +274,176 @@ HashMap时一个存储键值对的集合，是基于Map接口的实现。
 若内容非空，且发生键值冲突，就直接替换原内容；
 若发生位置冲突，则存进链表/红黑树中，若链表长度超出阈值，同时将其转变为树；
 ②get：
-
+根据key获取hash值，调用getNode()尝试获取内容；
+先判断哈希表是否已建立(为空)，表中是否有元素(长度大于0)，表中对应hash寻址有元素(tab[(n-1)&hash]！=null)，以上不成立则返回null；
+如果对应的hash值和键值都一致，就返回键值对first；
+若键值不一致，对应数、链表调用getTreeNode()或.next()找到满足的键值为止；
 
 
 (20)简述Java中的深拷贝与浅拷贝，C++中的浅拷贝和深拷贝
-(21)解释一下static块和static变量的执行顺序
+①对于基本数据类型，赋值运算传递值，浅拷贝也能实现复制；而引用数据类型则是传递引用，没有实例复制；浅拷贝只是复制一个对象，传递引用，并没有复制实例；深拷贝则是创建一个新的实例并复制原对象的所有数据类型变量。
+②Java中的clone是浅拷贝，若要实现深拷贝，需要继承clonable接口，重写clone方法；
+③C++默认的拷贝构造函数是浅拷贝，使用时要注意野指针的生成(野指针指向已删除对象或未申请访问权限的指针，与空指针不同，不能用NULL判断，进行操作容易造成程序错误)
+C++浅拷贝和深拷贝的区别在于复制指针时是否重新创建内存空间。浅拷贝在类里有指针成员的情况下只复制指针地址，导致两个成员指针指向同一块内存，这样在分别delete时会产生野指针。
+④需要用到拷贝构造函数的时候：对象以值传递方式进入函数体或从函数返回；一个对象需要通过另一个对象初始化；
+
+
+(21)static块和static变量的执行顺序
+①父类静态变量和静态代码块(先声明先执行)
+②子类静态变量和静态代码块(先声明先执行)
+③父类的变量和代码块(先声明先执行)
+④父类构造函数
+⑤子类的变量和代码块(先声明先执行)
+⑥子类构造函数
+
+
 (22)equals()的重写规则
+①重写equals()的步骤：首先考虑null的情况，再考虑是否同类，然后逐一判断对象的基本类型属性和重写hashcode()对引用类型属性进行比较，判断元素是否相同。系统提供的重写方法默认比较所有的属性，根据特定属性组合判断自定义重写即可。
+②重写规则：(对于任意非null引用对象x)
+自反性：x.equals(x)返回true；
+对称性：x.equals(y)返回true，则y.equals(x)也返回true；
+传递性：y.equals(x)、y.equals(z)返回true，则x.equals(z)也返回true；
+一致性：对象中比较的属性没有修改，则y.equals(x)的返回结果不会变；
+与空比较：非空对象x.equals(null)返回false；
+
+
 (23)Java中如何创建线程？
-(24)JDK1.8新特性
+1.简介
+①继承Thread类：重写run方法、创建线程对象、调用线程对象的start()启动线程；
+>public class CreateThreadTest{
+    public static void main(String[] args){
+        new ThreadTest().start();
+        new ThreadTest().start();
+    }
+}
+>class ThreadTest extends Thread{
+    private int i = 0;
+    @Override
+    public void run(){
+        for (;i<100;i++){
+            System.out.println(Thread.currentThread().getName() + " is running: " + i);
+        }
+    }
+}
+
+Thread的常用方法：
+start()--启动线程并执行相应的run()方法；
+run()--子线程的执行体；
+currentThread()--调取当前线程；
+getName()--获取线程名字；
+setName()--设置线程名字；
+yield()--设置当前线程(执行状态)为可执行状态(就绪状态)，亦称为线程让步。CPU会从众多可执行态里选择线程执行，有可能重新选中改线程；
+join()--在主线程A中调用子线程B的join()方法，主线程处于等待态(阻塞)，等子线程终止时，主线程继续执行join()之后的代码；
+isAlive()--判断当前线程是否还存活
+sleep(long l)--让当前线程睡眠l毫秒
+getPriority()--返回线程优先级
+setPriority(int newPriority)--设置线程优先级1~10。线程的调度策略采用抢占式，优先级高的线程有更大的几率优先执行，但不是绝对优先执行；
+
+②实现Runnable接口：定义Runnable接口，并重写run()方法、创建Runnable实现类的对象作为创建Thread对象的target参数，此Thread对象才是真正的线程对象、调用线程对象的start()方法启动线程；
+>public class CreateThreadTest{
+    public static void main(String[] args){
+        RunnableTest runnableTest = new RunnableTest();
+        new Thread(runnableTest, "thread1").start();
+        new Thread(runnableTest, "thread2").start();
+    }
+}
+>class RunnableTest implements Runnable{
+    private int i = 0;
+    @Override
+    public void run(){
+        for (;i<100;i++){
+            System.out.println(Thread.currentThread().getName() + " is running: " + i);
+        }
+    }
+}
+
+③使用Callable和Future：
+Callable接口提供一个call()方法作为线程执行体，call()方法比run()功能更强大--有返回值，且可以声明抛出异常；
+Future接口可接收Callable接口中call()方法的返回值；
+由于Callable是Java5新增的接口，不是Runnable接口的子接口，所以Callable对象不能作为Thread对象的target。为此引入了RunableFuture接口，该接口是Runnable接口和Future接口的子接口，提供了FutureTask实现类，RunnableFuture接口和FutureTask都可以作为Thread对象的target。
+>public interface Callable<V>{
+    V call() throws Exception;
+}
+Callable和Future创建线程的步骤：定义Callable接口实现类，重写call()方法作为线程执行体、创建Callable实现类实例，使用FutureTask类包装Callable对象、使用FutureTask对象作为Thread对象的target创建并启动线程、调用FutureTask对象的get()方法获得子线程执行结束的返回值；
+>import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+>public class CreateThreadTest{
+    public static void main(String[] args){
+        CallableTest callableTest = new CallableTest();
+        FutureTask<Integer> futureTask = new FutureTask<>(callableTest);
+        new Thread(futureTask).start();
+        try{
+            System.out.println("子线程的返回值： " + futureTask.get());
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }catch (ExecutionException e){
+            e.printStackTrace();
+        }
+    }
+}
+>class CallableTest implements Callable{
+    @Override
+    public Integer call() throws Exception{
+        int sum = 0;
+        for(int i=1;i<101;i++){
+            sum += i;
+        }
+        System.out.println(Thread.currentThread().getName() + " is running: " + sum);
+        return sum;
+    }
+}
+
+④使用实现了Exector接口的ThreadPoolExecutor创建线程池；
+
+
+2.不同方法对比
+①实现Runnable/Callable接口相比继承Thread类的优势
+**适合多个线程进行资源共享(Runnable/Callable的实现类需要再次用Thread类包装才能调用start()方法，若用不同的Thread对象包装同一个实现类对象，就能实现资源共享了。此时要注意锁和同步等线程安全问题)；
+避免java中类单继承的限制(功能扩展)；
+**增加程序健壮性，代码和数据相互独立；
+**线程池只能放Runnable和Callable接口实现类，不能直接放入继承Thread的类；
+
+②Callable和Runnable的区别
+Callable重写的是call()方法，Runnable重写的是run()方法；
+call()方法执行后有返回值，run()方法没有返回值；
+call()方法可以抛出异常，run()方法不可以；
+**运行Callable任务可以获得Future对象(RunnableFuture)，表示异步计算的结果，通过Future对象可以了解任务执行情况，可以获取任务结果，还可以取消任务的执行。
+
+
+**(24)JDK1.8新特性
+①接口的扩展方法：接口允许有default修饰的非抽象方法及静态方法；
+**②函数式接口，方法与构造方法的引用；
+
 
 ### 2.集合源码
-排序算法比较
-Hashmap是线程安全的吗?为什么？
-ArrayList与LinkedList区别
-HashMap、LinkedHashMap和TreeMap
-冒泡排序的优化以及快排过程及优化
-红黑树
-JDK7与JDK8中hashmap的区别
-hashmap的初始容量为什么设置为16？
-平衡二叉树的插入删除操作
+(1)排序算法比较
+①快排是一个就地排序，分治思想，大规模递归算法，本质是归并排序的就地版本。快排基本是最快的排序算法，但大量递归不一定适合内存有限的机器；
+②归并排序
+归并排序比堆排稍快(因为需要额外建堆)，但需要多一倍的内存空间(多一个res数组记录排序结果)；
+③堆排序
+堆排序非常适合海量数据中维护前K大/小的任务；其可以维护一个K元素的堆进行筛选。就算要进行全部元素的排序，也是就地进行元素交换，不会由快排、归并的爆栈风险；
+④希尔排序
+希尔排序通过对数据分组排序，再整体进行一次插入排序，减少数据交换移动的次数。虽然速度比上述排序快，但实现简单，适合5k以下数据量的数列重复排序场合；
+⑤插入排序
+是对冒泡排序的改进，速度快2倍。一般不在数据1K以上或重复排序超过200数据项的序列；
+⑥冒泡排序
+最慢的排序算法；
+⑦选择排序/交换排序
+同样很慢；
+⑧基数排序
+只能用于整数或字符串类排序，有最高位优先MSD和最低位优先LSD两种排法，时间复杂度为O(d*(N+k))--d为基数个数(个十百千)、N为数组长度、k为进制数；
+
+
+(2)Hashmap是线程安全的吗?为什么？
+(3)ArrayList与LinkedList区别
+(4)HashMap、LinkedHashMap和TreeMap
+(5)冒泡排序的优化以及快排过程及优化
+(6)红黑树
+(7)JDK7与JDK8中hashmap的区别
+(8)hashmap的初始容量为什么设置为16？
+(9)平衡二叉树的插入删除操作
+
 
 ### 3.JVM
 JVM内存布局
@@ -969,29 +1120,28 @@ def shellSort(nums):
 实现：自上而下递归；自下而上迭代(推荐)
 流程：递出过程--数组的不断二分；归来过程--数组的不断排序合并
 源码：
-def mergeSort(nums):
-    import math
+def mergeSort_divide(nums):
     if len(nums) < 2:
         return nums
-    middle = math.floor(len(nums)/2)
-    left, right = nums[0:middle], nums[middle:]
-    return merge(mergeSort(left), mergeSort(right))
+    middle = len(nums) // 2
+    left, right = nums[:middle], nums[middle:]
+    return merge(mergeSort_divide(left), mergeSort_divide(right))
 
 def merge(left, right):
     result = []
     while left and right:
         if left[0] <= right[0]:
-            result.append(left.pop[0])
+            result.append(left.pop(0))
         else:
-            result.append(right.pop[0])
-    while left:
-        result.append(left.pop[0])
-    while right:
-        result.append(right.pop[0])
+            result.append(right.pop(0))
+    if left:
+        result.extend(left.pop(0))
+    if right:
+        result.extend(right.pop(0))
     return result
 
 6.快速排序 -- TC:O(NlogN), SC:O(logN), 不稳定
-原理：快排是在冒泡排序基础上的分治法，优于一般的对数复杂度算法（因为常数因子较小），且出现最坏情况O(N^2)的可能性很低（需要逆序数组）。通常默认使用快排算法。
+原理：快排是在冒泡排序基础上的分治法，优于一般的对数复杂度算法（因为常数因子较小），且出现最坏情况O(N^2)的可能性很低（需要逆序数组）。通常默认使用快排算法。另有双路快排，三路快排等变形。
 步骤：随机抽出一个元素作为基准(pivot)，将数列划分为小于基准和大于基准两部分，再递归地从子序列中选出子基准划分更小的序列，直到不能再划分为止。由于划分后的子序列不断变小，需要比较的空间也呈指数级减少。
 源码：
 def quickSort(nums, left=None, right = None):
@@ -1021,18 +1171,18 @@ def swap(nums, i, j):
 7.堆排序 -- TC:O(NlogN), SC:O(1), 不稳定
 步骤：创建一个堆，不断shiftdown() ，然后将堆首推出，堆的尺寸减一，直至排序完毕。
 源码：
+# 所有子函数直接在数据上操作，不用返回数值
 def buildMaxHeap(arr):
-    import math
-    for i in range(math.floor(len(arr)/2), -1, -1):
+    for i in range(len(arr)//2, -1, -1):
         heapify(arr, i)
 
 def heapify(arr, i):
     left = 2*i + 1
-    right = 2*1 + 2
+    right = 2*i + 2
     largest = i
-    if left < arrLen and arr[left] > arr[largest]:
+    if left < len(arr) and arr[left] > arr[largest]:
         largest = left
-    if right < arrLen and arr[right] > arr[largest]:
+    if right < len(arr) and arr[right] > arr[largest]:
         largest = right
     if largest != i:
         swap(arr, i, largest)
@@ -1042,12 +1192,10 @@ def swap(arr, i, j):
     arr[i], arr[j] = arr[j], arr[i]
 
 def heapSort(arr):
-    global arrLen
-    arrLen = len(arr)
     buildMaxHeap(arr)
     for i in range(len(arr)-1, 0, -1):
         swap(arr, 0, i)
-        arrLen -= 1
+        arr = arr[:-1]
         heapify(arr, 0)
     return arr
 

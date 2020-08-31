@@ -1,3 +1,4 @@
+# Version0
 class Solution:
     def maxProfit(self, prices: List[int]) -> int:
     	N = len(prices)
@@ -23,3 +24,27 @@ class Solution:
     			profit = prices[R] - prices[L]
     			return profit
     		else:
+
+
+# Version1
+# 贪心思路
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        # init
+        N = len(prices)
+        res = 0
+        if N == 0:
+            return res
+        
+        dp = prices.copy()
+        curMax = prices[-1]
+
+        # traverse
+        for i in range(N-1, 0, -1):
+            if curMax > dp[i-1]:
+                res = max(curMax-dp[i-1], res)
+
+            else:
+                curMax = dp[i-1]
+
+        return res
