@@ -52,3 +52,11 @@ for i in range(2, len(s) + 1):
     else:
         dp.append(0)  # 4
 print(dp[len(s)])
+
+
+# T2
+# 四个空杯装对应体积液体的最少操作步骤
+
+
+# T3
+# 陆地面积
