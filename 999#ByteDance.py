@@ -71,36 +71,10 @@ print(res)
 '''
 
 
-# double index
-# input
-N, D = list(map(int, input().split()))
-arr = list(map(int, input().split()))
+# T3
+# 数列k项和关于m的最大余数
 
-# init
-cnt = 0
-oldR = 0
-r = 2
 
-if N < 3:
-    print(0)
-else:
-    for l in range(N-2):
-        # move left
-        if arr[r] - arr[l] > D:
-            continue
+# T4
+# 最大点
 
-        while arr[r] - arr[l] <= D:
-            # move right
-            r += 1
-            if r >= N:
-                break
-        r -= 1
-        if r == oldR:
-            continue
-        oldR = r
-        k = r-l+1
-        if k < 3:
-            continue
-        # update tmp
-        cnt += k*(k-1)*(k-2)/6
-    print(int(cnt))

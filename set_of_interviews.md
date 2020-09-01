@@ -437,7 +437,9 @@ call()方法可以抛出异常，run()方法不可以；
 
 
 (2)Hashmap是线程安全的吗?为什么？
-
+①put()方法不同步；
+②addEntry()方法不是同步的；
+③resize()扩容方法不同步；
 
 
 (3)ArrayList与LinkedList区别
@@ -463,6 +465,7 @@ ArraryList基于数组，查找快；LinkedList基于链表，插入删除快；
 
 
 (6)红黑树
+
 
 
 (7)JDK7与JDK8中hashmap的区别
