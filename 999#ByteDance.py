@@ -78,3 +78,30 @@ print(res)
 # T4
 # 最大点
 
+
+# T5
+# 最大的(子数组区间内最小值与和的乘积)
+N = int(input())
+arr=[int(x) for x in input()[:-1].split(' ')]
+arr += [-1]
+
+# init
+beforeSum = []
+stack = []
+res = 0
+
+for i in range(N+1):
+    sentinel = arr[i]
+    rightSum = 0
+    leftSum = 0
+    # pop
+    while stack and sentinel <= stack[-1]:
+        curNode = stack.pop()
+        leftSum += beforeSum.pop()
+        rightSum += curNode
+        res = max(res, (leftSum + rightSum)*curNode)
+    # minimal add
+    stack.append(sentinel)
+    beforeSum.append(leftSum + rightSum)
+
+print(res)
