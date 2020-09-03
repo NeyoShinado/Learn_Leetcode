@@ -198,7 +198,7 @@ Java的泛型基本上在编译器中实现，编译结束后会擦除Java的泛
 ①wait：让当前线程进入等待状态，也能释放当前线程的锁；
 ②notify：唤醒当前对象上等待的单个线程； 
 ③notifyAll：唤醒所有线程；
-④clone：克隆先给新对象分配内存，然后再将原对象的各个域填充到新对象域中，是深复制； 
+④clone：克隆先给新对象分配内存，然后再将原对象的各个域填充到新对象域中，是深复制；
 ⑤hashcode：根据具体的哈希函数将对象的信息映射成一个散列值，在包含容器类中使用能减少equals方法的调用次数，提高检索性能；
 ⑥equals：==可以理解为“浅对比”，即直接对比引用类型变量是否指向同一个对象地址；重写的equal方法往往用于实现“深对比”的作用，比较的是指向对象的内容；
 ⑦toString：返回该对象的字符串表示，通常形式--“类名@此对象的无符号十六进制哈希码表示”；
@@ -224,7 +224,7 @@ char是按字符存储的，可以存储Unicode字符集中的汉字。
 (16)HashMap与HashTable的区别
 HashMap和HashTable都提供键值映射服务，可以遍历视图，支持浅拷贝和序列化。不过HashTable已经被淘汰，不建议使用。
 ①时间上：HashMap出现得较晚；
-②对外接口：两者都实现了Map,Clineable,Serializable三个接口。而HashMap继承自抽象类AbstractMap，HashTable继承自抽象类已经废弃的Dictionary；
+②对外接口：两者都实现了Map,Cloneable,Serializable三个接口。而HashMap继承自抽象类AbstractMap，HashTable继承自抽象类已经废弃的Dictionary；
 ③对Null：HashMap支持null键和null值，将null的hashCode定为0。HashTable遇到null会抛出NullPointerException异常。
 **④初始容量上：HashTable是11，HashMap是16；HashMap的最大容量是2^30or1<<30(使用的类型为int，最高31位是符号位，容量不能为负，所以取不到)，默认负载因子都是0.75(泊松分布碰撞最小)；**
 扩容阈值：threshold = newCap * loadFactor;占用容量大于阈值开始扩容
