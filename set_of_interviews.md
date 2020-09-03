@@ -515,6 +515,118 @@ volatile能保证有序性吗？
 
 #### Hadoop
 # ---------------------------------------------
+1.简介
+Hadoop支持并发读，但只支持单用户写。且用户只能使用append操作在末尾添加数据，不能在文件的任意位置修改。所以Hadoop适合离线分析，不适合实时性要求高的系统。
+
+2.Hadoop核心优势：
+①高可靠性：支持同一数据多个副本保存机制，保证分布式高效读取的同时避免数据丢失；
+②高扩展性：能方便地扩展大量节点，用于分布式存储计算，能管理TB、PB级别的数据；
+③高效率：结合MapReduce思想，支持分布式并行工作和数据本地处理；
+④高容错：能将集群中失败节点的任务重新分配。
+
+
+(1)HDFS
+HDFS主要由NameNode, DataNode, SecondaryNameNode组成，进程的启动顺序如右所示。
+缺点：响应时间长，不适合实时数据访问；不支持并发写操作，同一时间一个文件只能由一个线程进行写；不适合存储大量小文件，因为一个Block会分配150byte存储元数据，过多小文件会导致NameNode利用率低下；
+
+1.NameNode是主节点，是一个主服务器，负责存储文件的元数据：文件名、文件目录结构、文件属性、以及块列表和对应的DataNode节点。还负责管理client对文件的访问，包括提供访问权限及数据节点引用。
+NameNode大致分为两个层次：Namespace管理层，负责管理文件系统中的树状目录结构以及文件和数据块的映射关系；BlockManagement，负责管理文件系统中文件的物理块和实际存储位置的映射关系BlocksMap。Namespace管理的元数据常驻内存，还会周期Flush到持久化设备上的FSImage文件；BlockMap元数据只存在内存中，重启时需要根据DataNode的汇报信息重新构造BlocksMap。
+NetworkTopology机架拓扑图，管理多有DataNode，在写入数据前需要确定数据块的写入位置，维护机架拓扑。
+NameNode的两个重要文件：
+①FSImage 元数据镜像文件(保存文件系统的目录数)
+②Edits 元数据操作日志(记录针对目录树的更改操作)
+NameNode启动流程：FSImage文件系统元数据加载，edits的操作记录回放，checkpoint、DataNode的BlockReport。两个文件一旦损坏将导致系统不可用。
+查看指令(将序列化的FSImage文件转为文本文件或XML文件)
+>hdfs oiv -i <输入FSImage文件> -o <输出转换的文件> -p <转换的格式:Ls\XML\FileDistribution>
+
+2.DataNode
+DataNode是数据节点，负责存储文件和文件的校验文件(文件的长度、校验和时间戳)。client获得权限后从DataNode中读取和写入数据。
+
+3.SecondaryNameNode
+作用是辅助NameNode工作，是NameNode的冷备份而不是热备份。类似于数据库的检查点，SecondaryNameNode(Hadoop2.X 是Standby NameNode)会按照时间阈值或edits额大小阈值定期从NameNode获得FSImage和Edit，将它们合并为新的FSImage.ckpt，再将FSImage发送给NameNode。当NameNode宕机时，可以从SecondaryNameNode记录的信息进行恢复，但获得的不是最新的镜像。
+之所以要在SNN上合并，是因为该步骤比较耗时，在NN进行的话会导致系统卡顿；
+
+①冷备份：系统未安装或未配置成当前系统相同的运行环境，应用数据没有及时转入备份系统，平时处于关闭状态。备份时需要暗转配置所需的运行环境并用外部存储介质恢复应用数据，将终端用户切换到备份系统。
+优点：设备投资少，节省通信费用，对通信环境要求不高；
+缺点：恢复时间长(1周)，数据完整性与一致性差；
+②温备份：将备份系统配置成当前系统相似的运行环境，定期备份数据，周期性开机更新备份数据。需要时可以直接使用定期备份数据，手工或批量追捕孤立数据。
+优点：投资较少，通信环境要求不高；
+缺点：恢复时间长(数天)，数据完整性与一致性较差；
+③热备份：备份处于联机状态，当前应用系统通过高速通信线路将数据实时传送到备份系统，保持备份数据同步；也可以定时在备份系统上恢复应用系统的数据。需要备份时，只需追补很少的孤立数据，能尽快恢复业务；
+优点：恢复时间短(几小时)，数据完整性好，数据丢失可能性最低；
+缺点：设备投资大，通信费用高，通信环境要求高，维护管理较复杂。
+
+**FSImage和Edits合并过程：
+①SNN通知NN切换到editlog
+②SNN通过http get方式从NN获得FSImage和Edits
+③SNN将FSImage加入内存，然后开始合并Edits
+④SNN将新的FSImage.ckpt返回给NN
+⑤NN用新的将FSImage.ckpt重命名为FSImage并替换旧的FSImage
+
+4.client
+①client从NameNode获取数据分块的逻辑，然后client进行文件分块，文件大小超过block(HDFS1.x 64Mb，HDFS2.x 128Mb)限制时进行划分，并将分好的块写入对应的DataNode中。
+②读取文件流程：
+client调用FileSystem.open()方法通过RPC(远程过程调用协议--调用远程函数)与NN通信，NN返回该文件的部分或全部block列表(DataNode地址)；
+选取与客户端最近的DataNode简历连接，读取block，返回FSDataInputStream；
+调用FSDataInputStream的read()方法读取数据；
+当读取到Block结尾时，FSDataInputStream关闭与当前DataNode的连接，并寻找下一个Block最近的DataNode；
+每读完一个Block都会进行checksum验证，如果验证失败，客户端会通知NN，然后读取最近的一个拥有Block拷贝的DataNode；
+如果Block列表读完，但文件没有结束，那么FileSystem再向NN获取下一批Block列表，否则关闭FSDataInputStream。
+③文件写入流程：
+client调用FileSystem的create()方法向NN发送请求，在NameSpace中创建新文件，但并不关联任何块；
+NN验证该文件是否已经存在，如果验证通过，NN记录新文件信息，并在某一DataNode上创建数据块；
+返回FSDataOutputStream并将client引导至数据块执行写入操作；
+client调用FSDataOutputStream的write()方法写入文件数据，HDFS默认将每个数据块备份三个副本。FSDataOutputStream先将数据写入第一个节点，数据包由第一个节点传送并写入第二个节点，再由第二个节点传送写入到第三个节点。最后再由3->2->1->FSDataOutputStream返回ack包，确认复制成功；
+client调用流的close()方法，flush缓冲区的数据包，block完成复制份数后，向NN返回成功信息。
+
+
+5.HDFS如何实现高可靠性
+①一个NN节点多个DN节点的设计使得就算有DN节点失效，也能重新分配任务维持正常运行；
+②数据备份机制：
+  对数据的冗余存储；
+  机架存放策略 -- 30-40个连接同一网络交换机的节点的物理存储集合称为机架。三个备份block会放在不同的机架中或不同DataNode中；
+③故障检测机制：
+  心跳机制：DN每3秒向NN发送心跳包表示节点活着，然后从NN接受可能带有数据操作指令的返回信息。如果NN超过十分钟没有收到DN的心跳包，表明该节点已经死亡；
+  块报告：DN每1小时向NN发送块报告，该报告包含节点所有的块信息；
+  数据完整性检测：数据读写和存储的完整性。一种方法是使用校验和，DN存储客户端上传数据之前计算一个校验和(默认512个字节计算一次)，客户端读取数据时也会计算一个校验和，如果不匹配说明数据存在错误；第二种方法是DN运行着一个数据块检测程序DataBlockScanner，定期对存储在上面的block检测校验和并向NN报告，检测物理存储的改变。
+④SNN辅助NN，进行FSImage和Edits的合并，避免NN卡住崩溃；
+⑤垃圾回收机制：开启垃圾回收站，把删除的文件先放在回收站中，等配置时间结束再进行真正的数据删除。通过修改core-site.xml的配置调节回收机制。
+>fs.trash.interval 值为0关闭回收站，否则为分钟数，一般设1440，指一天后真正删除回收站的文件
+>fs.trash.checkpoint.interval 垃圾回收的检查时间，默认为0
+
+
+(2)MapReduce
+1.设计背景
+对大量文件进行运算处理，因为涉及频繁I/O，速度往往很慢。可行的提速方案有并行处理，但给进程划分出大小相同的作业不容易实现；而不同文件的大小差异可能很大，可以进一步将数据划分为固定大小的块再分配给进程执行；分块的策略就增添了结果合并的问题；另一方面不同机器处理能力也会不同，相互的协调难度和可靠性会随着机器数量的增多而受影响。
+所以需要MapReduce运算框架进行优化。
+
+2.特点
+①易于编程
+②良好拓展性
+③高容错性
+④适合PB级海量数据的离线处理
+
+3.系统架构(1.x)
+①作业(job)流程
+  client启动一个作业，向JobTracker请求作业号；
+  client向HDFS复制作业的资源文件(jar文件、配置文件、输入划分信息)，并存在JobTracker的jobID文件夹中；
+  JobTracker接收到作业队列后，将其加入作业队列。HDFS根据输入划分信息将数据split为独立数据块，JobTracker为每个划分新建1个Task并分配给TaskTracker执行(任务分配遵循数据本地化原则，亦称移动计算。Map任务和jar副本分配给拥有处理数据的DataNode节点)。
+  TaskTracker定期向JobTracker发送包含Map任务完成进度的心跳包；
+  当JobTracker接收到最后一个Map任务发来的信息时，将作业设置成“成功”。当Jobclient查询就将成功信息返回给用户。
+②组件
+JobClient：用户编写的MabReduce程序通过JobClient提交给JobTracker；
+JobTracker：负责资源监控和作业调度，将作业分成一系列任务task进行调度，指派给TaskTracker并监控所有TaskTracker与作业的健康情况，一旦有失败情况就将任务分配到其他节点上执行；
+TaskTracker：管理每个任务在每个节点的执行情况，周期性地返回心跳包将本节点资源使用情况和任务进展情况汇报给JobTracker，同时接收JobTracker发送的命令并执行；
+Task：job拆分出来的执行单元，分为MapTask和ReduceTask，由TaskTracker启动，一般一个节点可以运行多个Map和Reduce任务；
+③设计理念：
+    “计算向数据靠拢”，而不是传统的“数据向计算靠拢”，减少移动大量数据的网络传输开销；
+    MapReduce框架和HDFS相结合(master机上JobTracker和NameNode结合、slave机上TaskTracker与DataNode结合)，运行在一组相同的节点，允许运算框架在存好数据的节点上高效调度任务，减少节点间数据的移动，高效利用网络带宽；
+④编程模型
+
+
+(3)Yarn
+MapReduce1.x 的JobTracker要同时管理资源分配和任务监听，JobTracker节点压力比较大。MapReduce2.x的Yarn平台将资源管理和任务执行分开管理。由ResourceManager负责总的资源管理(相当于NN)，NodeManger负责节点资源管理。
+当Client提交任务时，RM为这个任务创建(单独的守护进程)Application Master来将恐任务的执行情况，向RM汇总；App Mst还会向RM申请资源，RM根据情况在NodeManager分配container资源给App Mst这个任务使用。
 
 
 
