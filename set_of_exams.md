@@ -639,6 +639,40 @@ for v ← 0 to V
 
 
 
+### Math/数学思维
+*(腾讯T6)给定一正整数，计算有多少对质数和等于这个正整数。
+>Summary:
+1.和的组合数从N//2开始取起，确保无重复；
+2*.2~N中素数的筛选(埃拉托斯特尼法)：核心思想，从小的数开始遍历，素数的倍数一定不是素数。
+该算法的复杂度达到O(NloglogN)，
+>def primeSelect(N):
+arr = [0 for _ in range(N)]
+prime = []
+for i in range(2, N+1):
+    if not arr[i]:
+        prime.append(i-1)
+    for j in range(2, N//i+1):
+        arr[j] = 1
+3*.上述方法仍有计算冗余，大部分合数会被因子重复除。用欧拉筛法保证了每个合数只被最小的质因数筛一次，即当前因数只能筛掉和比它小且和它互质的质数因子的乘数，非互质的因子会与后面更大的因数筛掉其共有的合数。复杂度将为O(N)
+>def primeSelect(N):
+    arr = [0 for _ in range(N)]
+    prime = []
+    index = 0
+    for i in range(2, N+1):
+        if not arr[i-1]:
+            prime.append(i)
+            index += 1
+        for j in range(0, index+1):
+            # 遍历质数因子
+            if i*prime[index]>N:
+                break
+            arr[i*prime[index]] = 1
+            if i % prime[index] == 0:
+                break
+
+
+
+
 #### Type/类型
 # ---------------------------------------------
 ### 数组
