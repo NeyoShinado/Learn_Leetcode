@@ -860,6 +860,35 @@ Hadoop - 对一段时间内存储的数据块进行批量处理。
 ### Zookeeper
 
 ### hive
+(1)数据倾斜解决方案
+1.背景
+数据分布不均匀，造成数据热点
+
+
+2.现象
+执行任务，进度长时间维持在99%。单一、少量reduce的记录数与平均记录数差异过大，拉长了最长时长。具体情况如：
+①join：某些表较小，但key集中；大表与大表合并，但分桶的判断字段0值或空值过多，造成分发到的某几个reduce处理耗时；
+②group by：分组维度过小，造成某些值的数量过多；
+③count distinct：某些特殊值过多；
+
+
+3.原因
+①key分布不均匀；
+②业务数据特性（如空字段、不同表的分组字段类型不同）；
+③建表时考虑不周；
+④SQL语句导致数据倾斜；
+
+
+4.解决方案
+①map端聚合：hive.map.aggr = true;  hive.groupby.skewindata = true; 负载均衡
+SQL调节
+②用join key分布最均衡的表作为驱动表；
+③大小表join：让小维度表先进入内存在map端完成reduce；
+④大表join：把空值的key变成字符串加上随机数，把倾斜数据分到不同reduce上，由于null关联不上，处理后不影响结果；
+⑤count distinct：将空值过滤，在最后结果+1；如果还有其他计算，先group by将空值单独处理再和其他计算结果union；
+⑥group by维度过小：采用sum() group by 的方式替换count(distinct)完成计算；
+⑦也可以将倾斜数据单独拿出来处理再union回去；
+
 
 ### redis
 
@@ -1949,7 +1978,7 @@ class Codec:
             node = queue.pop(0)
             if data:
                 val = data.pop(0)
-                if val != "None":
+                if val != "None ":
                     node.left = TreeNode(val)
                     queue.append(node.left)
             if data:
