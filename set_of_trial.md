@@ -254,3 +254,82 @@ N个杯子的倒水问题，尤其是区分杯子状态的倒水问题，用不�
 用一个递归函数可以实现连通域的值更改以及统计操作。只需要对上左右的海遍历出来并做标记，将非标记的海改为陆地。最后通过底边的任意一点开始连通域统计就能实现大陆的面积统计。
 
 
+### 微众银行
+1.给定一长度为N数组arr，为有多少个三元组(ai,aj,ak)，满足i<j<k，且ai≤aj≤ak。
+>Solution
+#!usr/etc/bin python
+# coding:utf-8
+
+'''
+#@ Author: Neyo
+#@ Date: 2020/9/27
+#@ note: closest num -- hash set
+'''
+
+
+def threeCnt():
+    # input
+    N = int(input())
+    arr = list(map(int, input().split()))
+
+    # init
+    res = 0
+    leftCnt = []
+    rightCnt = []
+    stack = []
+    for i in range(N):
+        if not stack:
+            leftCnt.append(0)
+            stack.append([arr[i], 1])
+            continue
+        j = 0
+        if arr[i] == stack[j][0]:
+            leftCnt.append(stack[j][1])
+            stack[j][1] += 1
+            continue
+        while arr[i] < stack[j][0]:
+            stack[j][1] += 1
+            j += 1
+            if j == len(stack):
+                break
+        if j == len(stack):
+            leftCnt.append(0)
+            stack.insert(j, [arr[i], 1])
+        elif arr[i] > stack[j][0]:
+            leftCnt.append(stack[j][1])
+            stack.insert(j, [arr[i], stack[j][1]+1])
+        else:
+            leftCnt.append(stack[j][1])
+            stack[j][1] += 1
+    stack = []
+    for i in range(-1, -N-1, -1):
+        if not stack:
+            rightCnt.append(0)
+            stack.append([arr[i], 1])
+            continue
+        j = 0
+        if arr[i] == stack[j][0]:
+            rightCnt.append(stack[j][1])
+            stack[j][1] += 1
+            continue
+        while arr[i] > stack[j][0]:
+            stack[j][1] += 1
+            j += 1
+            if j == len(stack):
+                break
+        if j == len(stack):
+            rightCnt.append(0)
+            stack.insert(j, [arr[i], 1])
+        elif arr[i] < stack[j][0]:
+            rightCnt.append(stack[j][1])
+            stack.insert(j, [arr[i], stack[j][1]+1])
+        else:
+            rightCnt.append(stack[j][0])
+            stack[j][1] += 1
+    rightCnt = rightCnt[::-1]
+
+    # traverse
+    for i in range(N):
+        res += leftCnt[i] * rightCnt[i]
+    print(res)
+    
