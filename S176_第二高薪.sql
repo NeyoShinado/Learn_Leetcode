@@ -22,7 +22,7 @@ ORDER BY Salary DESC
 LIMIT 1 OFFSET 1
 
 
-# Version 2
+#* Version 2
 # 使用子查询 + LIMIT
 # 使用临时表子查询
 SELECT 
