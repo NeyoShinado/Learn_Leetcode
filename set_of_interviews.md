@@ -481,7 +481,7 @@ ArraryList基于数组，查找快；LinkedList基于链表，插入删除快；
 共同点：非线程安全；
 区别：
 ①HashMap--数据无序，使用数组+链表/红黑树数据结构；
-②LinkedHashMap--数据有序，使用双向链表+HashMap。保存记录了记录的插入顺序，但遍历速度比HashMap慢；
+②LinkedHashMap--数据有序，使用双向链表+HashMap。底层仍然是HashMap的结构，通过维护Entry的before, after指针实现了链表的顺序性，能保存Entry的插入顺序，但遍历速度比HashMap慢；
 ③TreepMap--数据有序，使用红黑树结构。且记录更具键排序，默认升序。其键或值都不能为空。
 
 

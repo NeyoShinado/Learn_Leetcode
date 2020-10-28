@@ -21,7 +21,7 @@ CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
 BEGIN
 	SET N := N-1;
 	RETURN(
-		SELECT
+		SELECT DISTINCT
 			Salary
 		FROM
 			Employee
@@ -91,7 +91,7 @@ END
 
 
 // Version 5
-// ▲自定义变量
+// 自定义变量▲
 // 建立两表关联的方法不适用于数据量大的情况，复杂度会达到O(N^2)级别
 // 建立自定义变量能优化至O(2N)
 // ①变量实现按薪水降序含重连续排名；②筛选出排名为N的薪水；③DISTINCT去重
@@ -110,6 +110,27 @@ BEGIN
       WHERE rnk = N
   );
 END
+
+或 更一般的函数体写法
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+# 函数名使用returns，函数体使用return
+BEGIN
+	# i 定义返回值变量
+	DECLARE res INT DEFAULT NULL;
+	# ii 执行查询语句
+	SELECT
+		DISTINCT salary INTO res
+	FROM
+		(SELECT
+			salary, @r:=IP(@p=salary, @r, @r+1) AS rnk, @p:=salary
+		FROM
+			employee, (SELECT @r:=0, @p:=NULL) init
+		ORDER BY
+			salary DESC) tmp
+	WHERE rnk=N;
+	# iii 返回查询结果
+	RETURN res;
+END	
 
 
 // Version 6
