@@ -338,3 +338,16 @@ def threeCnt():
         res += leftCnt[i] * rightCnt[i]
     print(res)
     
+
+
+
+# ------------ 面试总结 ------------ #
+### 声网二面
+1.数据库CAP原理
+2.MySQL适用于什么场景
+3.Google 的三篇经典论文介绍了什么核心技术
+4.语句'Select * From table A group by x'的实现过程是怎样的
+5.spark的RDD 为什么需要备份3份，而不是4份，这其中的设计思想是什么
+6.RDD如何优化其性能（相对于MapReduce）
+7.有无实际搭建数据库、建表的经历
+8.spark中挂了服务器会怎样
