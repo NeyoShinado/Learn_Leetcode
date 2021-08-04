@@ -41,7 +41,7 @@
 # 使用场合
 Provides a general-case interface for Requests sessions to contact HTTP and
 HTTPS urls by implementing the Transport Adapter interface. This class will
-usually be created by the :class:`Session ` class under the covers. 
+usually be created by the :class:`Session ` class under the covers.
 # 输入参数
 :param pool_connections: The number of urllib3 connection pools to cache.
 :param pool_maxsize: The maximum number of connections to save in the pool.
@@ -333,9 +333,19 @@ mid分到右区间：[left,mid-1]与[mid,right]->right=mid-1或left=mid
 
 
 
+### 回溯算法
+回溯算法适用于状态空间很大且只有一个状态变量搜索可能解的情况，找到解的时候往往做拷贝加入结果集中。过程中的状态变量因而有“恢复现场/撤销选择”的功能。
+
 
 ### DFS/深度优先搜索
 DFS隐式地实现了栈，一次遍历一条路径，其遍历具有回溯性，一般用于解决连通性问题。
+相对于DFS能直接使用系统栈，BFS一般要编写节点类通过队列存储状态信息，所以实现要复杂些。若将队列替换为先进先出的栈，BFS也能很快地切换到DFS。
+
+
+(22)generate_parenthese
+给定n，要求生成所有可能且有效的n对括号组合。
+>Summary:
+1.DFS与BFS的差异。带Stack的BFS转化为DFS。
 
 
 (301)*remove_invalid_parentheses⭐⭐
@@ -407,9 +417,9 @@ BFS基于队列实现，一次遍历一层，用于解决最短路径问题。�
 void slidingWindow(string s, string t) {
     unordered_map<char, int> need, window;
     for (char c : t) need[c]++;
-    
+
     int left = 0, right = 0;
-    int valid = 0; 
+    int valid = 0;
     while (right < s.size()) {
         // c 是将移入窗口的字符
         char c = s[right];
@@ -421,7 +431,7 @@ void slidingWindow(string s, string t) {
         /*** debug 输出的位置 ***/
         printf("window: [%d, %d)\n", left, right);
         /********************/
-        
+
         // 判断左侧窗口是否要收缩
         while (window needs shrink) {
             // d 是将移出窗口的字符
@@ -726,10 +736,6 @@ for i in range(2, N+1):+
 
 (21)merge_two_list
 将两个升序链表合并为一个升序链表，通过拼接给定结点组成。
-
-
-(22)generate_parenthese
-给定n，要求生成所有可能且有效的n对括号组合。
 
 
 (23)merge_K_Lists
